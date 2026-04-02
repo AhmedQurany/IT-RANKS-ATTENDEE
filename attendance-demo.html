@@ -678,6 +678,50 @@ tbody tr:hover td { background:#fafbfc; }
   border:1px solid #fed7aa;
 }
 
+/* ── Shift sub-tabs ──────────────────────────────────────── */
+.shift-tab {
+  padding:9px 16px;
+  font-size:13px; font-weight:600;
+  color:var(--text-muted);
+  background:transparent; border:none;
+  border-bottom:2px solid transparent;
+  margin-bottom:-2px;
+  cursor:pointer;
+  transition:color .12s, border-color .12s;
+  display:inline-flex; align-items:center;
+}
+.shift-tab:hover { color:var(--text-primary); }
+.shift-tab.active { color:var(--brand); border-bottom-color:var(--brand); }
+
+/* ── Scope pill (assign modal) ───────────────────────────── */
+.scope-pill {
+  flex:1; display:flex; align-items:center; gap:6px; justify-content:center;
+  padding:8px 10px;
+  border:1.5px solid var(--border); border-radius:var(--radius-md);
+  font-size:12px; font-weight:600; color:var(--text-secondary);
+  cursor:pointer; transition:all .12s; text-align:center;
+}
+.scope-pill:hover { border-color:var(--brand-mid); color:var(--text-primary); }
+.scope-pill.active { border-color:var(--brand); background:var(--brand-light); color:var(--brand); }
+
+/* ── Employee picker (assign modal) ──────────────────────── */
+.emp-picker-list {
+  border:1px solid var(--border); border-radius:var(--radius-md);
+  max-height:200px; overflow-y:auto;
+}
+.emp-picker-item {
+  display:flex; align-items:center; gap:10px;
+  padding:9px 12px;
+  border-bottom:1px solid var(--border);
+  cursor:pointer;
+  transition:background .1s;
+  user-select:none;
+}
+.emp-picker-item:last-child { border-bottom:none; }
+.emp-picker-item:hover { background:var(--bg); }
+.emp-picker-item.selected { background:var(--brand-light); }
+.emp-picker-item input[type=checkbox] { accent-color:var(--brand); flex-shrink:0; }
+
 /* ── Day pill (work system modal) ───────────────────────── */
 .day-pill {
   display:inline-flex; align-items:center; gap:5px;
@@ -1226,18 +1270,86 @@ tbody tr:hover td { background:#fafbfc; }
 
       <!-- ══ SHIFTS VIEW ══ -->
       <div class="view" id="view-shifts">
-        <div style="display:flex;align-items:center;justify-content:space-between">
+
+        <!-- Header -->
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
           <div>
-            <div style="font-size:15px;font-weight:700">Shift Library</div>
-            <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Define shift templates by <strong>from/to hours</strong>. Assign them inside Work Systems.</div>
+            <div style="font-size:15px;font-weight:700">Shifts</div>
+            <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Define shift hours and manage employee assignments</div>
           </div>
-          <button class="btn btn-primary" onclick="openModal('shiftModal')">
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 2V12M2 7H12" stroke="white" stroke-width="1.8" stroke-linecap="round"/></svg>
-            New Shift
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-outline" onclick="openModal('shiftModal')">
+              <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 1V12M1 6.5H12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+              New Shift
+            </button>
+            <button class="btn btn-primary" onclick="openAssignModal()">
+              <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="5" cy="4" r="2.5" stroke="white" stroke-width="1.4"/><path d="M1 11C1 8.8 2.8 7 5 7" stroke="white" stroke-width="1.4" stroke-linecap="round"/><path d="M9 8V12M7 10H11" stroke="white" stroke-width="1.4" stroke-linecap="round"/></svg>
+              Assign Employee
+            </button>
+          </div>
+        </div>
+
+        <!-- Sub-tabs -->
+        <div style="display:flex;gap:0;border-bottom:2px solid var(--border)">
+          <button class="shift-tab active" id="tab-library" onclick="switchShiftTab('library')">
+            Shift Library
+          </button>
+          <button class="shift-tab" id="tab-assignments" onclick="switchShiftTab('assignments')">
+            Employee Assignments
+            <span class="nav-badge" style="position:static;margin-left:6px" id="assignmentsBadge">0</span>
           </button>
         </div>
 
-        <div class="grid-3" id="shiftsGrid"></div>
+        <!-- Library panel -->
+        <div id="shiftLibraryPanel">
+          <div class="grid-3" id="shiftsGrid"></div>
+        </div>
+
+        <!-- Assignments panel -->
+        <div id="shiftAssignmentsPanel" style="display:none">
+          <div class="card">
+            <div class="filter-bar">
+              <div class="search-wrap">
+                <svg class="search-icon" width="13" height="13" viewBox="0 0 13 13" fill="none">
+                  <circle cx="5.5" cy="5.5" r="4" stroke="#94a3b8" stroke-width="1.3"/>
+                  <path d="M8.5 8.5L11.5 11.5" stroke="#94a3b8" stroke-width="1.3" stroke-linecap="round"/>
+                </svg>
+                <input type="text" placeholder="Search employee or department..." id="assignmentSearch" oninput="renderAssignmentsTable()">
+              </div>
+              <select class="select-filter" id="assignmentShiftFilter" onchange="renderAssignmentsTable()">
+                <option value="">All Shifts</option>
+                <option>Morning</option>
+                <option>Evening</option>
+                <option>Night</option>
+                <option>Flexible</option>
+              </select>
+              <select class="select-filter" id="assignmentScopeFilter" onchange="renderAssignmentsTable()">
+                <option value="">All Scopes</option>
+                <option value="employee">Individual</option>
+                <option value="department">Department</option>
+                <option value="org">Organization</option>
+              </select>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Employee / Department</th>
+                    <th>Work System</th>
+                    <th>Shift</th>
+                    <th>Hours</th>
+                    <th>Effective From</th>
+                    <th>Effective To</th>
+                    <th>Assigned By</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="assignmentsTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
       </div>
 
       <!-- ══ LOCATIONS VIEW ══ -->
@@ -1879,51 +1991,108 @@ tbody tr:hover td { background:#fafbfc; }
   </div>
 </div>
 
-<!-- Assign Shift Modal -->
+<!-- Assign Employee Modal -->
 <div class="modal-overlay" id="assignModal">
-  <div class="modal">
+  <div class="modal" style="width:520px">
     <div class="modal-header">
-      <div class="modal-title">Assign Shift</div>
+      <div class="modal-title">Assign Employee to Shift</div>
       <button class="modal-close" onclick="closeModal('assignModal')">
         <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1 1L11 11M11 1L1 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
       </button>
     </div>
     <div class="modal-body">
+
+      <!-- Step 1: Work System → Shift cascade -->
+      <div style="display:flex;gap:8px;align-items:flex-end">
+        <div class="form-group" style="flex:1">
+          <label class="form-label">Work System</label>
+          <select class="form-input" id="assignWsSelect" onchange="updateAssignShiftOptions()">
+            <option value="">— Select Work System —</option>
+          </select>
+        </div>
+        <div class="form-group" style="flex:1">
+          <label class="form-label">Shift</label>
+          <select class="form-input" id="assignShiftSelect" disabled>
+            <option value="">— Select Shift —</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Shift preview pill -->
+      <div id="assignShiftPreview" style="display:none;background:var(--brand-light);border-radius:var(--radius-sm);padding:8px 12px;font-size:12px;color:var(--brand);font-weight:600"></div>
+
+      <!-- Step 2: Scope -->
       <div class="form-group">
         <label class="form-label">Assign To</label>
-        <select class="form-input">
-          <option>Individual Employee</option>
-          <option>Department</option>
-          <option>Organization-wide</option>
+        <div style="display:flex;gap:8px">
+          <label class="scope-pill active" id="scopeEmployee" onclick="switchAssignScope('employee',this)">
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="4.5" r="2.5" stroke="currentColor" stroke-width="1.3"/><path d="M1.5 11C1.5 8.8 3.8 7 6.5 7C9.2 7 11.5 8.8 11.5 11" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+            Individual Employee
+          </label>
+          <label class="scope-pill" id="scopeDepartment" onclick="switchAssignScope('department',this)">
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><rect x="1" y="5" width="5" height="7" rx="1" stroke="currentColor" stroke-width="1.3"/><rect x="7" y="1" width="5" height="11" rx="1" stroke="currentColor" stroke-width="1.3"/></svg>
+            Department
+          </label>
+          <label class="scope-pill" id="scopeOrg" onclick="switchAssignScope('org',this)">
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="5" stroke="currentColor" stroke-width="1.3"/><path d="M1.5 6.5H11.5M6.5 1.5C5 4 5 9 6.5 11.5M6.5 1.5C8 4 8 9 6.5 11.5" stroke="currentColor" stroke-width="1.3"/></svg>
+            Organization
+          </label>
+        </div>
+      </div>
+
+      <!-- Employee picker (shown when scope = employee) -->
+      <div id="empPickerSection" class="form-group">
+        <label class="form-label">Search &amp; Select Employees</label>
+        <div style="position:relative;margin-bottom:6px">
+          <svg style="position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--text-muted)" width="13" height="13" viewBox="0 0 13 13" fill="none">
+            <circle cx="5.5" cy="5.5" r="4" stroke="#94a3b8" stroke-width="1.3"/>
+            <path d="M8.5 8.5L11.5 11.5" stroke="#94a3b8" stroke-width="1.3" stroke-linecap="round"/>
+          </svg>
+          <input class="form-input" type="text" placeholder="Search by name or ID…" style="padding-left:30px" id="empPickerSearch" oninput="renderEmpPicker()">
+        </div>
+        <div class="emp-picker-list" id="empPickerList"></div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:5px" id="empPickerCount">0 selected</div>
+      </div>
+
+      <!-- Department picker (shown when scope = department) -->
+      <div id="deptPickerSection" class="form-group" style="display:none">
+        <label class="form-label">Select Department</label>
+        <select class="form-input" id="deptSelect">
+          <option>ICU</option>
+          <option>Emergency</option>
+          <option>Cardiology</option>
+          <option>Nursing B</option>
+          <option>Radiology</option>
+          <option>Surgery</option>
+          <option>Pharmacy</option>
+          <option>Pediatrics</option>
         </select>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:5px">All employees in this department will be assigned.</div>
       </div>
-      <div class="form-group">
-        <label class="form-label">Department / Employee</label>
-        <input class="form-input" type="text" placeholder="Search department or employee...">
+
+      <!-- Org notice -->
+      <div id="orgPickerSection" class="form-group" style="display:none">
+        <div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:var(--radius-sm);padding:10px 12px;font-size:12px;color:#92400e">
+          ⚠️ This will assign the selected shift to <strong>all 1,248 employees</strong> across all clusters. Use with caution.
+        </div>
       </div>
-      <div class="form-group">
-        <label class="form-label">Shift</label>
-        <select class="form-input">
-          <option>Morning (07:00–15:00)</option>
-          <option>Evening (15:00–23:00)</option>
-          <option>Night (23:00–07:00)</option>
-          <option>Flexible (08:00–16:00)</option>
-        </select>
-      </div>
+
+      <!-- Dates -->
       <div class="form-row">
         <div class="form-group">
           <label class="form-label">Effective From</label>
-          <input class="form-input" type="date" value="2026-04-01">
+          <input class="form-input" type="date" value="2026-04-02" id="assignDateFrom">
         </div>
         <div class="form-group">
-          <label class="form-label">Effective To (optional)</label>
-          <input class="form-input" type="date">
+          <label class="form-label">Effective To <span style="font-weight:400;color:var(--text-muted)">(optional)</span></label>
+          <input class="form-input" type="date" id="assignDateTo">
         </div>
       </div>
+
     </div>
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="closeModal('assignModal')">Cancel</button>
-      <button class="btn btn-primary" onclick="closeModal('assignModal');showToast('Shift assigned successfully','success')">Assign Shift</button>
+      <button class="btn btn-primary" id="assignSubmitBtn" onclick="submitAssignment()">Assign Shift</button>
     </div>
   </div>
 </div>
@@ -2342,24 +2511,28 @@ function renderAttendance() {
 // ── Render shift library ──────────────────────────────────
 function renderShifts() {
   const grid = document.getElementById('shiftsGrid');
-  grid.innerHTML = shifts.map(s => `
+  grid.innerHTML = shifts.map(s => {
+    const empCount = shiftAssignments.filter(a => a.shift === s.name).length;
+    return `
     <div class="shift-card">
       <div style="display:flex;align-items:center;justify-content:space-between">
         <div class="shift-name">${s.name}</div>
-        <span style="font-size:11px;color:var(--text-muted);font-weight:600">SHIFT</span>
+        <span style="font-size:11px;color:var(--text-muted);font-weight:600;background:var(--bg);padding:2px 7px;border-radius:10px">${empCount} assigned</span>
       </div>
       <div class="shift-time" style="color:${s.color}">${s.from} – ${s.to}</div>
       <div class="shift-meta">
         <span>⏱ Late threshold: +${s.lateMin} min</span>
       </div>
       <div style="margin-top:6px;padding-top:8px;border-top:1px solid var(--border);font-size:11px;color:var(--text-muted)">
-        Used in: <strong style="color:var(--text-secondary)">${workSystems.filter(ws=>ws.shifts.includes(s.name)).map(ws=>ws.name).join(', ') || 'Not assigned'}</strong>
+        Work Systems: <strong style="color:var(--text-secondary)">${workSystems.filter(ws=>ws.shifts.includes(s.name)).map(ws=>ws.name).join(', ') || 'None'}</strong>
       </div>
       <div style="display:flex;gap:6px;margin-top:8px">
-        <button class="btn btn-outline btn-sm" style="flex:1">Edit</button>
-        <button class="btn btn-danger btn-sm">Delete</button>
+        <button class="btn btn-primary btn-sm" style="flex:1" onclick="openAssignModal('${s.name}')">Assign Employee</button>
+        <button class="btn btn-outline btn-sm">Edit</button>
+        <button class="btn btn-danger btn-sm" onclick="showToast('Shift deleted','info')">Delete</button>
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 
 // ── Render work systems ───────────────────────────────────
@@ -2420,6 +2593,7 @@ function renderWorkSystems() {
         </div>
       </div>
       <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0;margin-left:8px">
+        ${!isDraft ? `<button class="btn btn-primary btn-sm" onclick="openAssignModal('','${ws.id}')">Assign Employee</button>` : ''}
         <button class="btn btn-outline btn-sm" onclick="openModal('wsModal')">Edit</button>
         ${isDraft
           ? `<button class="btn btn-success btn-sm" onclick="showToast('Work system activated','success')">Activate</button>`
@@ -2563,6 +2737,286 @@ function generateReport() {
   card.scrollIntoView({ behavior:'smooth', block:'nearest' });
 }
 
+// ── Employee master list (for picker) ────────────────────
+const allEmployees = [
+  { id:'EMP-1041', name:'Fatimah Al-Dosari',    initials:'FA', dept:'ICU',        cluster:'C1' },
+  { id:'EMP-1087', name:'Khalid Al-Harbi',      initials:'KH', dept:'Emergency',  cluster:'C2' },
+  { id:'EMP-1023', name:'Nora Al-Shehri',       initials:'NS', dept:'Cardiology', cluster:'C3' },
+  { id:'EMP-1156', name:'Omar Al-Ghamdi',       initials:'OG', dept:'Nursing B',  cluster:'C4' },
+  { id:'EMP-1099', name:'Sara Al-Mutairi',      initials:'SM', dept:'Radiology',  cluster:'C2' },
+  { id:'EMP-1034', name:'Abdulaziz Al-Qahtani', initials:'AQ', dept:'Surgery',    cluster:'C1' },
+  { id:'EMP-1201', name:'Reem Al-Dossary',      initials:'RD', dept:'Pharmacy',   cluster:'C3' },
+  { id:'EMP-1067', name:'Majed Al-Otaibi',      initials:'MO', dept:'ICU',        cluster:'C1' },
+  { id:'EMP-1145', name:'Hessa Al-Shamsi',      initials:'HS', dept:'Pediatrics', cluster:'C2' },
+  { id:'EMP-1188', name:'Turki Al-Zahrani',     initials:'TZ', dept:'Cardiology', cluster:'C3' },
+  { id:'EMP-1167', name:'Lujain Al-Qahtani',    initials:'LQ', dept:'Cardiology', cluster:'C3' },
+  { id:'EMP-1142', name:'Khalid Al-Najdi',      initials:'KN', dept:'Cardiology', cluster:'C3' },
+  { id:'EMP-1204', name:'Ahmed Al-Mutlaq',      initials:'AM', dept:'Cardiology', cluster:'C3' },
+];
+
+// ── Shift assignments ────────────────────────────────────
+let shiftAssignments = [
+  { id:'SA-001', scope:'department', target:'ICU',        deptCount:48, workSystem:'Standard Work Week', shift:'Morning',  dateFrom:'2026-01-01', dateTo:'',           assignedBy:'Hala Al-Zahrani' },
+  { id:'SA-002', scope:'department', target:'Emergency',  deptCount:62, workSystem:'Standard Work Week', shift:'Evening',  dateFrom:'2026-01-01', dateTo:'',           assignedBy:'Maha Al-Ghamdi' },
+  { id:'SA-003', scope:'department', target:'Cardiology', deptCount:34, workSystem:'Standard Work Week', shift:'Flexible', dateFrom:'2026-01-01', dateTo:'',           assignedBy:'Hala Al-Zahrani' },
+  { id:'SA-004', scope:'department', target:'Nursing B',  deptCount:29, workSystem:'Standard Work Week', shift:'Night',    dateFrom:'2026-01-01', dateTo:'',           assignedBy:'Maha Al-Ghamdi' },
+  { id:'SA-005', scope:'employee',   target:'EMP-1041',   empName:'Fatimah Al-Dosari',  workSystem:'Standard Work Week', shift:'Morning',  dateFrom:'2026-03-15', dateTo:'2026-06-30', assignedBy:'Hala Al-Zahrani' },
+  { id:'SA-006', scope:'employee',   target:'EMP-1156',   empName:'Omar Al-Ghamdi',     workSystem:'Weekend Shift',      shift:'Night',    dateFrom:'2026-04-01', dateTo:'',           assignedBy:'Maha Al-Ghamdi' },
+  { id:'SA-007', scope:'employee',   target:'EMP-1034',   empName:'Abdulaziz Al-Qahtani', workSystem:'Ramadan Schedule', shift:'Flexible', dateFrom:'2026-02-29', dateTo:'2026-03-29', assignedBy:'Hala Al-Zahrani' },
+];
+
+// ── Assignments table ─────────────────────────────────────
+function renderAssignmentsTable() {
+  const search   = (document.getElementById('assignmentSearch')?.value||'').toLowerCase();
+  const shiftF   = document.getElementById('assignmentShiftFilter')?.value || '';
+  const scopeF   = document.getElementById('assignmentScopeFilter')?.value || '';
+
+  const filtered = shiftAssignments.filter(a => {
+    const label = a.scope==='employee' ? a.empName : a.target;
+    if (search  && !label.toLowerCase().includes(search) && !a.shift.toLowerCase().includes(search)) return false;
+    if (shiftF  && a.shift !== shiftF) return false;
+    if (scopeF  && a.scope !== scopeF) return false;
+    return true;
+  });
+
+  const tbody = document.getElementById('assignmentsTableBody');
+  if (!tbody) return;
+
+  const badge = document.getElementById('assignmentsBadge');
+  if (badge) badge.textContent = shiftAssignments.length;
+
+  if (!filtered.length) {
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:32px;color:var(--text-muted)">No assignments match the current filters.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = filtered.map(a => {
+    const s = shifts.find(x=>x.name===a.shift);
+    const avatarBg    = a.scope==='employee'?'var(--brand-light)':a.scope==='department'?'var(--green-bg)':'var(--amber-bg)';
+    const avatarColor = a.scope==='employee'?'var(--brand)':a.scope==='department'?'var(--green)':'var(--amber)';
+    const initials    = a.scope==='employee' ? (allEmployees.find(e=>e.id===a.target)?.initials||'?') : a.target.slice(0,2).toUpperCase();
+    const label       = a.scope==='employee' ? a.empName : a.scope==='department' ? `${a.target} (${a.deptCount} emp.)` : 'All Organization';
+    const sublabel    = a.scope==='employee' ? a.target : a.scope==='department' ? 'Department' : 'Organization-wide';
+    const scopeChip   = a.scope==='employee'   ? `<span class="chip chip-blue">Individual</span>`
+                      : a.scope==='department' ? `<span class="chip chip-green">Department</span>`
+                      : `<span class="chip chip-amber">Org-wide</span>`;
+    const shiftChip   = s ? `<span class="chip" style="background:${s.bg};color:${s.color}">${a.shift}</span>` : a.shift;
+    const hours       = s ? `${s.from} – ${s.to}` : '—';
+    const dateTo      = a.dateTo || '<span style="color:var(--text-muted)">Ongoing</span>';
+
+    return `<tr>
+      <td>
+        <div class="emp-cell">
+          <div class="emp-avatar" style="background:${avatarBg};color:${avatarColor}">${initials}</div>
+          <div>
+            <div class="emp-name">${label}</div>
+            <div class="emp-id">${sublabel}</div>
+          </div>
+        </div>
+      </td>
+      <td style="font-size:12px;color:var(--text-secondary)">${a.workSystem}</td>
+      <td>${shiftChip}</td>
+      <td style="font-size:12px;color:var(--text-secondary)">${hours}</td>
+      <td style="font-size:12px">${a.dateFrom}</td>
+      <td style="font-size:12px">${dateTo}</td>
+      <td style="font-size:12px;color:var(--text-muted)">${a.assignedBy}</td>
+      <td>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-outline btn-sm" onclick="editAssignment('${a.id}')">Edit</button>
+          <button class="btn btn-danger btn-sm" onclick="removeAssignment('${a.id}')">Remove</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function removeAssignment(id) {
+  shiftAssignments = shiftAssignments.filter(a=>a.id!==id);
+  renderAssignmentsTable();
+  renderShifts();
+  showToast('Assignment removed','info');
+}
+function editAssignment(id) {
+  openAssignModal();
+  showToast('Edit mode — changes not wired in demo','info');
+}
+
+// ── Shift sub-tab switch ──────────────────────────────────
+function switchShiftTab(tab) {
+  document.getElementById('tab-library').classList.toggle('active',    tab==='library');
+  document.getElementById('tab-assignments').classList.toggle('active', tab==='assignments');
+  document.getElementById('shiftLibraryPanel').style.display    = tab==='library'     ? '' : 'none';
+  document.getElementById('shiftAssignmentsPanel').style.display = tab==='assignments' ? '' : 'none';
+  if (tab==='assignments') renderAssignmentsTable();
+}
+
+// ── Assign modal open ─────────────────────────────────────
+let _selectedEmpIds = new Set();
+
+function openAssignModal(preShift='', preWsId='') {
+  // Populate WS dropdown
+  const wsSel = document.getElementById('assignWsSelect');
+  wsSel.innerHTML = '<option value="">— Select Work System —</option>' +
+    workSystems.filter(ws=>ws.status!=='draft').map(ws=>
+      `<option value="${ws.id}" ${ws.id===preWsId?'selected':''}>${ws.name}</option>`
+    ).join('');
+
+  // Trigger shift options
+  updateAssignShiftOptions(preShift);
+
+  // Reset scope to employee
+  switchAssignScope('employee', document.getElementById('scopeEmployee'));
+
+  // Reset selected employees
+  _selectedEmpIds = new Set();
+  renderEmpPicker();
+  updateEmpPickerCount();
+
+  openModal('assignModal');
+}
+
+function updateAssignShiftOptions(preselectShift='') {
+  const wsId   = document.getElementById('assignWsSelect').value;
+  const ws     = workSystems.find(w=>w.id===wsId);
+  const shiftSel = document.getElementById('assignShiftSelect');
+  const preview  = document.getElementById('assignShiftPreview');
+
+  if (!ws) {
+    shiftSel.innerHTML = '<option value="">— Select Shift —</option>';
+    shiftSel.disabled = true;
+    preview.style.display = 'none';
+    return;
+  }
+
+  shiftSel.disabled = false;
+  shiftSel.innerHTML = '<option value="">— Select Shift —</option>' +
+    ws.shifts.map(sn => {
+      const s = shifts.find(x=>x.name===sn);
+      return `<option value="${sn}" ${sn===preselectShift?'selected':''}>${sn}  (${s?s.from+' – '+s.to:''})</option>`;
+    }).join('');
+
+  shiftSel.onchange = () => updateShiftPreview();
+  if (preselectShift) updateShiftPreview();
+}
+
+function updateShiftPreview() {
+  const sn = document.getElementById('assignShiftSelect').value;
+  const preview = document.getElementById('assignShiftPreview');
+  if (!sn) { preview.style.display='none'; return; }
+  const s = shifts.find(x=>x.name===sn);
+  if (!s) { preview.style.display='none'; return; }
+  preview.style.display = 'block';
+  preview.style.background = s.bg;
+  preview.style.color = s.color;
+  preview.textContent = `${s.name} · ${s.from} – ${s.to} · Late threshold: +${s.lateMin} min`;
+}
+
+// ── Scope switch ──────────────────────────────────────────
+let _currentScope = 'employee';
+function switchAssignScope(scope, el) {
+  _currentScope = scope;
+  document.querySelectorAll('.scope-pill').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('empPickerSection').style.display  = scope==='employee'   ? '' : 'none';
+  document.getElementById('deptPickerSection').style.display = scope==='department' ? '' : 'none';
+  document.getElementById('orgPickerSection').style.display  = scope==='org'        ? '' : 'none';
+}
+
+// ── Employee picker ───────────────────────────────────────
+function renderEmpPicker() {
+  const query = (document.getElementById('empPickerSearch')?.value||'').toLowerCase();
+  const list  = document.getElementById('empPickerList');
+  const shown = allEmployees.filter(e =>
+    !query || e.name.toLowerCase().includes(query) || e.id.toLowerCase().includes(query) || e.dept.toLowerCase().includes(query)
+  );
+  list.innerHTML = shown.map(e => `
+    <div class="emp-picker-item ${_selectedEmpIds.has(e.id)?'selected':''}" onclick="toggleEmpPick('${e.id}',this)">
+      <input type="checkbox" ${_selectedEmpIds.has(e.id)?'checked':''} readonly>
+      <div class="emp-avatar" style="width:28px;height:28px;font-size:11px;background:var(--brand-light);color:var(--brand)">${e.initials}</div>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:600;color:var(--text-primary)">${e.name}</div>
+        <div style="font-size:11px;color:var(--text-muted)">${e.id} · ${e.dept}</div>
+      </div>
+      <span class="chip chip-gray" style="font-size:10px">${e.cluster}</span>
+    </div>`).join('') || `<div style="padding:20px;text-align:center;color:var(--text-muted);font-size:12px">No employees match your search.</div>`;
+  updateEmpPickerCount();
+}
+
+function toggleEmpPick(id, el) {
+  if (_selectedEmpIds.has(id)) {
+    _selectedEmpIds.delete(id);
+    el.classList.remove('selected');
+    el.querySelector('input').checked = false;
+  } else {
+    _selectedEmpIds.add(id);
+    el.classList.add('selected');
+    el.querySelector('input').checked = true;
+  }
+  updateEmpPickerCount();
+}
+
+function updateEmpPickerCount() {
+  const el = document.getElementById('empPickerCount');
+  if (el) el.textContent = `${_selectedEmpIds.size} employee${_selectedEmpIds.size!==1?'s':''} selected`;
+}
+
+// ── Submit assignment ─────────────────────────────────────
+function submitAssignment() {
+  const wsId   = document.getElementById('assignWsSelect').value;
+  const shift  = document.getElementById('assignShiftSelect').value;
+  const ws     = workSystems.find(w=>w.id===wsId);
+  const dateFrom = document.getElementById('assignDateFrom').value;
+
+  if (!wsId || !shift) { showToast('Please select a Work System and Shift','error'); return; }
+
+  if (_currentScope==='employee' && _selectedEmpIds.size===0) {
+    showToast('Please select at least one employee','error'); return;
+  }
+
+  const newIds = [];
+  if (_currentScope==='employee') {
+    _selectedEmpIds.forEach(empId => {
+      const emp = allEmployees.find(e=>e.id===empId);
+      const newEntry = {
+        id: 'SA-' + String(shiftAssignments.length+1).padStart(3,'0'),
+        scope:'employee', target:empId, empName:emp.name,
+        workSystem: ws.name, shift, dateFrom,
+        dateTo: document.getElementById('assignDateTo').value,
+        assignedBy:'Hala Al-Zahrani'
+      };
+      shiftAssignments.push(newEntry);
+      newIds.push(emp.name);
+    });
+    showToast(`Shift assigned to ${newIds.length} employee${newIds.length!==1?'s':''}`, 'success');
+  } else if (_currentScope==='department') {
+    const dept = document.getElementById('deptSelect').value;
+    shiftAssignments.push({
+      id:'SA-'+String(shiftAssignments.length+1).padStart(3,'0'),
+      scope:'department', target:dept, deptCount:'?',
+      workSystem:ws.name, shift, dateFrom,
+      dateTo:document.getElementById('assignDateTo').value,
+      assignedBy:'Hala Al-Zahrani'
+    });
+    showToast(`Shift assigned to ${dept} department`,'success');
+  } else {
+    shiftAssignments.push({
+      id:'SA-'+String(shiftAssignments.length+1).padStart(3,'0'),
+      scope:'org', target:'All Organization',
+      workSystem:ws.name, shift, dateFrom,
+      dateTo:document.getElementById('assignDateTo').value,
+      assignedBy:'Hala Al-Zahrani'
+    });
+    showToast('Shift assigned organization-wide','success');
+  }
+
+  closeModal('assignModal');
+  renderShifts();
+  renderAssignmentsTable();
+  // Switch to assignments tab to show result
+  navigate('shifts', document.querySelector('[onclick*="shifts"]'));
+  switchShiftTab('assignments');
+}
+
 // ── Role switcher ─────────────────────────────────────────
 const roleViews = {
   hr:       { view:'dashboard', title:'Dashboard',       subtitle:'Tuesday, 1 April 2026 · Health Holding Company' },
@@ -2629,6 +3083,11 @@ renderAttendance();
 renderShifts();
 renderWorkSystems();
 renderViolations();
+// Seed assignment badge on load
+setTimeout(() => {
+  const b = document.getElementById('assignmentsBadge');
+  if (b) b.textContent = shiftAssignments.length;
+}, 0);
 </script>
 </body>
 </html>
