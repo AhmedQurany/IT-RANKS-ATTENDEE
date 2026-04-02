@@ -678,6 +678,20 @@ tbody tr:hover td { background:#fafbfc; }
   border:1px solid #fed7aa;
 }
 
+/* ── Day pill (work system modal) ───────────────────────── */
+.day-pill {
+  display:inline-flex; align-items:center; gap:5px;
+  padding:5px 10px; border:1.5px solid var(--border);
+  border-radius:20px; cursor:pointer; font-size:12px; font-weight:600;
+  color:var(--text-secondary);
+  transition:border .12s, background .12s, color .12s;
+  user-select:none;
+}
+.day-pill:has(input:checked) {
+  border-color:var(--brand); background:var(--brand-light); color:var(--brand);
+}
+.day-pill input { display:none; }
+
 /* ── Responsive ─────────────────────────────────────────── */
 @media(max-width:900px) {
   .kpi-row { grid-template-columns:repeat(3,1fr); }
@@ -1170,6 +1184,7 @@ tbody tr:hover td { background:#fafbfc; }
                   <th>Shift</th>
                   <th>Check-in</th>
                   <th>Check-out</th>
+                  <th>Sign-out Status</th>
                   <th>Hours</th>
                   <th>Status</th>
                   <th>Location</th>
@@ -1213,8 +1228,8 @@ tbody tr:hover td { background:#fafbfc; }
       <div class="view" id="view-shifts">
         <div style="display:flex;align-items:center;justify-content:space-between">
           <div>
-            <div style="font-size:15px;font-weight:700">Shift Management</div>
-            <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Create, edit, and assign work shifts</div>
+            <div style="font-size:15px;font-weight:700">Shift Library</div>
+            <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Define shift templates by <strong>from/to hours</strong>. Assign them inside Work Systems.</div>
           </div>
           <button class="btn btn-primary" onclick="openModal('shiftModal')">
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 2V12M2 7H12" stroke="white" stroke-width="1.8" stroke-linecap="round"/></svg>
@@ -1223,63 +1238,6 @@ tbody tr:hover td { background:#fafbfc; }
         </div>
 
         <div class="grid-3" id="shiftsGrid"></div>
-
-        <div class="card">
-          <div class="card-header">
-            <div class="card-title">Shift Assignments</div>
-            <div class="card-actions">
-              <button class="btn btn-outline btn-sm" onclick="openModal('assignModal')">Assign Shift</button>
-            </div>
-          </div>
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Department / Employee</th>
-                  <th>Cluster</th>
-                  <th>Assigned Shift</th>
-                  <th>Effective Date</th>
-                  <th>Assigned By</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td><div class="emp-cell"><div class="emp-avatar" style="background:#e0f2fe;color:#0098ce">IC</div><div><div class="emp-name">ICU Department</div><div class="emp-id">48 employees</div></div></div></td>
-                  <td>Cluster 1</td>
-                  <td><span class="chip chip-blue">Morning 07:00–15:00</span></td>
-                  <td>1 Apr 2026</td>
-                  <td>Hala Al-Zahrani</td>
-                  <td><div style="display:flex;gap:6px"><button class="btn btn-outline btn-sm">Edit</button><button class="btn btn-danger btn-sm">Remove</button></div></td>
-                </tr>
-                <tr>
-                  <td><div class="emp-cell"><div class="emp-avatar" style="background:#fde8d8;color:#ea580c">ER</div><div><div class="emp-name">Emergency Dept.</div><div class="emp-id">62 employees</div></div></div></td>
-                  <td>Cluster 2</td>
-                  <td><span class="chip chip-purple">Evening 15:00–23:00</span></td>
-                  <td>1 Apr 2026</td>
-                  <td>Maha Al-Ghamdi</td>
-                  <td><div style="display:flex;gap:6px"><button class="btn btn-outline btn-sm">Edit</button><button class="btn btn-danger btn-sm">Remove</button></div></td>
-                </tr>
-                <tr>
-                  <td><div class="emp-cell"><div class="emp-avatar" style="background:#d1fae5;color:#10b981">CD</div><div><div class="emp-name">Cardiology Dept.</div><div class="emp-id">34 employees</div></div></div></td>
-                  <td>Cluster 3</td>
-                  <td><span class="chip chip-green">Flexible 08:00–16:00</span></td>
-                  <td>1 Apr 2026</td>
-                  <td>Hala Al-Zahrani</td>
-                  <td><div style="display:flex;gap:6px"><button class="btn btn-outline btn-sm">Edit</button><button class="btn btn-danger btn-sm">Remove</button></div></td>
-                </tr>
-                <tr>
-                  <td><div class="emp-cell"><div class="emp-avatar" style="background:#eef2ff;color:#6366f1">NR</div><div><div class="emp-name">Nursing – Dept. B</div><div class="emp-id">29 employees</div></div></div></td>
-                  <td>Cluster 4</td>
-                  <td><span class="chip chip-amber">Night 23:00–07:00</span></td>
-                  <td>1 Apr 2026</td>
-                  <td>Maha Al-Ghamdi</td>
-                  <td><div style="display:flex;gap:6px"><button class="btn btn-outline btn-sm">Edit</button><button class="btn btn-danger btn-sm">Remove</button></div></td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
       </div>
 
       <!-- ══ LOCATIONS VIEW ══ -->
@@ -1507,7 +1465,7 @@ tbody tr:hover td { background:#fafbfc; }
           </div>
           <div style="padding:20px;display:flex;flex-direction:column;gap:16px">
             <!-- Summary KPIs -->
-            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px">
+            <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px">
               <div style="background:var(--bg);border-radius:var(--radius-md);padding:14px">
                 <div style="font-size:11px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:.06em">Total Check-ins</div>
                 <div style="font-size:26px;font-weight:700;color:var(--brand);margin-top:4px">28,440</div>
@@ -1517,6 +1475,11 @@ tbody tr:hover td { background:#fafbfc; }
                 <div style="font-size:11px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:.06em">Avg. Attendance</div>
                 <div style="font-size:26px;font-weight:700;color:var(--green);margin-top:4px">83.2%</div>
                 <div style="font-size:11px;color:var(--text-muted)">Monthly average rate</div>
+              </div>
+              <div style="background:var(--bg);border-radius:var(--radius-md);padding:14px">
+                <div style="font-size:11px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:.06em">Late Sign-outs</div>
+                <div style="font-size:26px;font-weight:700;color:var(--purple);margin-top:4px">847</div>
+                <div style="font-size:11px;color:var(--text-muted)">Checked out after shift end</div>
               </div>
               <div style="background:var(--bg);border-radius:var(--radius-md);padding:14px">
                 <div style="font-size:11px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:.06em">Total Violations</div>
@@ -1538,18 +1501,19 @@ tbody tr:hover td { background:#fafbfc; }
                     <th>Week</th>
                     <th>Working Days</th>
                     <th>Avg Present</th>
-                    <th>Avg Late</th>
+                    <th>Avg Late In</th>
+                    <th>Late Sign-outs</th>
                     <th>Avg Absent</th>
                     <th>Attendance Rate</th>
                     <th>Violations</th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr><td>Week 1 (Mar 1–7)</td><td>5</td><td>1,040</td><td>82</td><td>126</td><td><span class="chip chip-green">83.3%</span></td><td>67</td></tr>
-                  <tr><td>Week 2 (Mar 8–14)</td><td>5</td><td>1,028</td><td>91</td><td>129</td><td><span class="chip chip-green">82.4%</span></td><td>78</td></tr>
-                  <tr><td>Week 3 (Mar 15–21)</td><td>5</td><td>1,055</td><td>76</td><td>117</td><td><span class="chip chip-green">84.5%</span></td><td>59</td></tr>
-                  <tr><td>Week 4 (Mar 22–28)</td><td>5</td><td>1,022</td><td>88</td><td>138</td><td><span class="chip chip-amber">81.9%</span></td><td>84</td></tr>
-                  <tr><td>Week 5 (Mar 29–31)</td><td>3</td><td>1,019</td><td>79</td><td>150</td><td><span class="chip chip-amber">81.7%</span></td><td>24</td></tr>
+                  <tr><td>Week 1 (Mar 1–7)</td><td>5</td><td>1,040</td><td>82</td><td><span style="color:var(--purple);font-weight:600">163</span></td><td>126</td><td><span class="chip chip-green">83.3%</span></td><td>67</td></tr>
+                  <tr><td>Week 2 (Mar 8–14)</td><td>5</td><td>1,028</td><td>91</td><td><span style="color:var(--purple);font-weight:600">198</span></td><td>129</td><td><span class="chip chip-green">82.4%</span></td><td>78</td></tr>
+                  <tr><td>Week 3 (Mar 15–21)</td><td>5</td><td>1,055</td><td>76</td><td><span style="color:var(--purple);font-weight:600">174</span></td><td>117</td><td><span class="chip chip-green">84.5%</span></td><td>59</td></tr>
+                  <tr><td>Week 4 (Mar 22–28)</td><td>5</td><td>1,022</td><td>88</td><td><span style="color:var(--purple);font-weight:600">221</span></td><td>138</td><td><span class="chip chip-amber">81.9%</span></td><td>84</td></tr>
+                  <tr><td>Week 5 (Mar 29–31)</td><td>3</td><td>1,019</td><td>79</td><td><span style="color:var(--purple);font-weight:600">91</span></td><td>150</td><td><span class="chip chip-amber">81.7%</span></td><td>24</td></tr>
                 </tbody>
               </table>
             </div>
@@ -1562,7 +1526,7 @@ tbody tr:hover td { background:#fafbfc; }
         <div style="display:flex;align-items:center;justify-content:space-between">
           <div>
             <div style="font-size:15px;font-weight:700">Work Systems</div>
-            <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Define attendance rules, overtime policies, and working patterns</div>
+            <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Each work system defines which <strong>days</strong> it applies to. Shifts (hours) are assigned within it.</div>
           </div>
           <button class="btn btn-primary" onclick="openModal('wsModal')">
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 2V12M2 7H12" stroke="white" stroke-width="1.8" stroke-linecap="round"/></svg>
@@ -1570,116 +1534,8 @@ tbody tr:hover td { background:#fafbfc; }
           </button>
         </div>
 
-        <div style="display:flex;flex-direction:column;gap:10px">
-          <div class="ws-card">
-            <div class="ws-icon" style="background:#e0f2fe">📋</div>
-            <div class="ws-body">
-              <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
-                <div class="ws-name">Standard Working Hours</div>
-                <span class="chip chip-green">Active · 4 clusters</span>
-              </div>
-              <div class="ws-desc">Fixed 8-hour workday, Sunday–Thursday. Compliance with official HRCo working hour regulations. Late threshold: 15 minutes. Overtime calculated after 8 hours.</div>
-              <div class="ws-tags">
-                <span class="chip chip-blue">Fixed Hours</span>
-                <span class="chip chip-gray">08:00 working hours</span>
-                <span class="chip chip-gray">OT after 8h</span>
-                <span class="chip chip-amber">Late ≥ 15 min</span>
-              </div>
-            </div>
-            <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0">
-              <button class="btn btn-outline btn-sm">Edit</button>
-              <button class="btn btn-danger btn-sm">Deactivate</button>
-            </div>
-          </div>
-
-          <div class="ws-card">
-            <div class="ws-icon" style="background:#d1fae5">🔄</div>
-            <div class="ws-body">
-              <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
-                <div class="ws-name">Flexible Working Hours</div>
-                <span class="chip chip-green">Active · 2 clusters</span>
-              </div>
-              <div class="ws-desc">Employee may check in between 07:00–10:00, completing a full 8-hour workday. Core hours: 10:00–14:00. Suited for administrative and support staff.</div>
-              <div class="ws-tags">
-                <span class="chip chip-green">Flexible Hours</span>
-                <span class="chip chip-gray">Core 10:00–14:00</span>
-                <span class="chip chip-gray">08:00 working hours</span>
-                <span class="chip chip-amber">Late ≥ 30 min past window</span>
-              </div>
-            </div>
-            <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0">
-              <button class="btn btn-outline btn-sm">Edit</button>
-              <button class="btn btn-danger btn-sm">Deactivate</button>
-            </div>
-          </div>
-
-          <div class="ws-card">
-            <div class="ws-icon" style="background:#fde8d8">🔃</div>
-            <div class="ws-body">
-              <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
-                <div class="ws-name">Rotating Shift System</div>
-                <span class="chip chip-blue">Active · Emergency &amp; ICU</span>
-              </div>
-              <div class="ws-desc">Three rotating shifts (Morning / Evening / Night) with 8-hour duration each. Employees rotate weekly. Mandatory 12-hour rest between shifts. Covers all 7 days.</div>
-              <div class="ws-tags">
-                <span class="chip chip-purple">Rotating</span>
-                <span class="chip chip-gray">7 days / week</span>
-                <span class="chip chip-gray">12h min rest</span>
-                <span class="chip chip-amber">OT after 8h per shift</span>
-              </div>
-            </div>
-            <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0">
-              <button class="btn btn-outline btn-sm">Edit</button>
-              <button class="btn btn-danger btn-sm">Deactivate</button>
-            </div>
-          </div>
-
-          <div class="ws-card" style="opacity:.7">
-            <div class="ws-icon" style="background:var(--bg)">📁</div>
-            <div class="ws-body">
-              <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
-                <div class="ws-name">On-Call System (Draft)</div>
-                <span class="chip chip-gray">Draft</span>
-              </div>
-              <div class="ws-desc">Special on-call work system for specialist physicians. Active hours tracked separately via device. Pending HRCo policy confirmation.</div>
-              <div class="ws-tags">
-                <span class="chip chip-gray">Draft</span>
-                <span class="chip chip-gray">Pending approval</span>
-              </div>
-            </div>
-            <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0">
-              <button class="btn btn-outline btn-sm">Edit</button>
-              <button class="btn btn-success btn-sm" onclick="showToast('Work system activated','success')">Activate</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Work System Rules Table -->
-        <div class="card">
-          <div class="card-header">
-            <div class="card-title">Attendance Rules Summary</div>
-          </div>
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Rule</th>
-                  <th>Standard Hours</th>
-                  <th>Flexible Hours</th>
-                  <th>Rotating Shifts</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr><td style="font-weight:600;color:var(--text-primary)">Daily working hours</td><td>8h</td><td>8h (flexible window)</td><td>8h per shift</td></tr>
-                <tr><td style="font-weight:600;color:var(--text-primary)">Late threshold</td><td>+15 min</td><td>+30 min past window</td><td>+20 min</td></tr>
-                <tr><td style="font-weight:600;color:var(--text-primary)">Overtime trigger</td><td>After 8h</td><td>After 8h</td><td>After 8h/shift</td></tr>
-                <tr><td style="font-weight:600;color:var(--text-primary)">Working days</td><td>Sun–Thu</td><td>Sun–Thu</td><td>All 7 days</td></tr>
-                <tr><td style="font-weight:600;color:var(--text-primary)">Biometric required</td><td><span class="chip chip-green">Yes</span></td><td><span class="chip chip-green">Yes</span></td><td><span class="chip chip-green">Yes</span></td></tr>
-                <tr><td style="font-weight:600;color:var(--text-primary)">GPS validation</td><td><span class="chip chip-green">Required</span></td><td><span class="chip chip-green">Required</span></td><td><span class="chip chip-green">Required</span></td></tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
+        <!-- Work System cards rendered by JS -->
+        <div id="workSystemsGrid" style="display:flex;flex-direction:column;gap:12px"></div>
       </div>
 
       <!-- ══ DISCIPLINARY RECORDS VIEW ══ -->
@@ -1994,58 +1850,26 @@ tbody tr:hover td { background:#fafbfc; }
       </button>
     </div>
     <div class="modal-body">
+      <div style="background:var(--bg);border-radius:var(--radius-sm);padding:10px 12px;font-size:12px;color:var(--text-secondary);line-height:1.5">
+        A shift defines <strong>hours only</strong>. The days it applies to are set by the Work System it's assigned to.
+      </div>
       <div class="form-group">
         <label class="form-label">Shift Name</label>
-        <input class="form-input" type="text" placeholder="e.g. Morning Shift">
+        <input class="form-input" type="text" placeholder="e.g. Morning, Night, On-Call">
       </div>
       <div class="form-row">
         <div class="form-group">
-          <label class="form-label">Start Time</label>
+          <label class="form-label">From (Start Time)</label>
           <input class="form-input" type="time" value="07:00">
         </div>
         <div class="form-group">
-          <label class="form-label">End Time</label>
+          <label class="form-label">To (End Time)</label>
           <input class="form-input" type="time" value="15:00">
         </div>
       </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">Shift Type</label>
-          <select class="form-input">
-            <option>Fixed</option>
-            <option>Flexible</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Late Threshold (min)</label>
-          <input class="form-input" type="number" value="15" min="0" max="60">
-        </div>
-      </div>
       <div class="form-group">
-        <label class="form-label">Working Days</label>
-        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:2px">
-          <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer">
-            <input type="checkbox" checked> Sun
-          </label>
-          <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer">
-            <input type="checkbox" checked> Mon
-          </label>
-          <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer">
-            <input type="checkbox" checked> Tue
-          </label>
-          <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer">
-            <input type="checkbox" checked> Wed
-          </label>
-          <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer">
-            <input type="checkbox" checked> Thu
-          </label>
-          <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer">
-            <input type="checkbox"> Fri
-          </label>
-          <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer">
-            <input type="checkbox"> Sat
-          </label>
-        </div>
+        <label class="form-label">Late Threshold (minutes after start)</label>
+        <input class="form-input" type="number" value="15" min="0" max="120">
       </div>
     </div>
     <div class="modal-footer">
@@ -2204,44 +2028,76 @@ tbody tr:hover td { background:#fafbfc; }
     </div>
     <div class="modal-body">
       <div class="form-group">
-        <label class="form-label">System Name</label>
-        <input class="form-input" type="text" placeholder="e.g. On-Call System">
+        <label class="form-label">Work System Name</label>
+        <input class="form-input" type="text" placeholder="e.g. Ramadan Schedule, Weekend Shift">
       </div>
+
       <div class="form-group">
-        <label class="form-label">Type</label>
-        <select class="form-input">
-          <option>Fixed Hours</option>
-          <option>Flexible Hours</option>
-          <option>Rotating Shifts</option>
-          <option>On-Call</option>
-        </select>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">Daily Working Hours</label>
-          <input class="form-input" type="number" value="8" min="1" max="24">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Late Threshold (min)</label>
-          <input class="form-input" type="number" value="15" min="0">
+        <label class="form-label">Day Type</label>
+        <div style="display:flex;gap:8px">
+          <label style="flex:1;border:1.5px solid var(--border);border-radius:var(--radius-md);padding:10px 12px;cursor:pointer;display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600" id="wsTypeRecurringLabel">
+            <input type="radio" name="wsDayType" value="recurring" checked onchange="toggleWsDayType(this.value)" style="accent-color:var(--brand)">
+            Recurring days
+            <span style="font-size:11px;color:var(--text-muted);font-weight:400">e.g. every Fri &amp; Sat</span>
+          </label>
+          <label style="flex:1;border:1.5px solid var(--border);border-radius:var(--radius-md);padding:10px 12px;cursor:pointer;display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600" id="wsTypeRangeLabel">
+            <input type="radio" name="wsDayType" value="range" onchange="toggleWsDayType(this.value)" style="accent-color:var(--brand)">
+            Specific date range
+            <span style="font-size:11px;color:var(--text-muted);font-weight:400">e.g. Ramadan month</span>
+          </label>
         </div>
       </div>
-      <div class="form-group">
-        <label class="form-label">Overtime Trigger (hours/day)</label>
-        <input class="form-input" type="number" value="8" min="1">
+
+      <!-- Recurring days picker -->
+      <div id="wsRecurringSection" class="form-group">
+        <label class="form-label">Select Days</label>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <label class="day-pill"><input type="checkbox" value="Sun"> Sun</label>
+          <label class="day-pill"><input type="checkbox" value="Mon"> Mon</label>
+          <label class="day-pill"><input type="checkbox" value="Tue" checked> Tue</label>
+          <label class="day-pill"><input type="checkbox" value="Wed" checked> Wed</label>
+          <label class="day-pill"><input type="checkbox" value="Thu" checked> Thu</label>
+          <label class="day-pill"><input type="checkbox" value="Fri" checked> Fri</label>
+          <label class="day-pill"><input type="checkbox" value="Sat" checked> Sat</label>
+        </div>
       </div>
-      <div class="form-group">
-        <label class="form-label">GPS Validation</label>
-        <select class="form-input"><option>Required</option><option>Optional</option></select>
+
+      <!-- Date range picker -->
+      <div id="wsRangeSection" class="form-row" style="display:none">
+        <div class="form-group">
+          <label class="form-label">From Date</label>
+          <input class="form-input" type="date">
+        </div>
+        <div class="form-group">
+          <label class="form-label">To Date</label>
+          <input class="form-input" type="date">
+        </div>
       </div>
+
       <div class="form-group">
-        <label class="form-label">Biometric Authentication</label>
-        <select class="form-input"><option>Required at check-in and check-out</option><option>Required at check-in only</option><option>Optional</option></select>
+        <label class="form-label" style="display:flex;align-items:center;justify-content:space-between">
+          Assigned Shifts
+          <button type="button" class="btn btn-outline btn-sm" onclick="openModal('shiftModal')">+ New Shift</button>
+        </label>
+        <div style="display:flex;flex-direction:column;gap:6px" id="wsShiftPickerList">
+          <label style="display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;font-size:13px">
+            <input type="checkbox" checked style="accent-color:var(--brand)"> <strong>Morning</strong> &nbsp;07:00 – 15:00
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;font-size:13px">
+            <input type="checkbox" style="accent-color:var(--brand)"> <strong>Evening</strong> &nbsp;15:00 – 23:00
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;font-size:13px">
+            <input type="checkbox" style="accent-color:var(--brand)"> <strong>Night</strong> &nbsp;23:00 – 07:00
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;font-size:13px">
+            <input type="checkbox" style="accent-color:var(--brand)"> <strong>Flexible</strong> &nbsp;08:00 – 16:00
+          </label>
+        </div>
       </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="closeModal('wsModal')">Cancel</button>
-      <button class="btn btn-primary" onclick="closeModal('wsModal');showToast('Work system created successfully','success')">Create System</button>
+      <button class="btn btn-primary" onclick="closeModal('wsModal');showToast('Work system created successfully','success')">Create Work System</button>
     </div>
   </div>
 </div>
@@ -2362,18 +2218,37 @@ tbody tr:hover td { background:#fafbfc; }
 
 <script>
 // ── Data ────────────────────────────────────────────────
+// shiftEnd = scheduled end; lateSignout = checked out after that time (by >0 min)
 const attendanceData = [
-  { id:'EMP-1041', name:'Fatimah Al-Dosari',   initials:'FA', dept:'ICU',         cluster:'C1', shift:'Morning',  checkIn:'08:58', checkOut:'16:02', hours:'7h 04m', status:'present',  location:'King Fahad Hospital' },
-  { id:'EMP-1087', name:'Khalid Al-Harbi',     initials:'KH', dept:'Emergency',   cluster:'C2', shift:'Morning',  checkIn:'09:34', checkOut:'—',      hours:'—',      status:'late',     location:'Al-Noor Specialist' },
-  { id:'EMP-1023', name:'Nora Al-Shehri',      initials:'NS', dept:'Cardiology',  cluster:'C3', shift:'Flexible', checkIn:'08:02', checkOut:'16:15', hours:'8h 13m', status:'present',  location:'King Abdulaziz Hosp.' },
-  { id:'EMP-1156', name:'Omar Al-Ghamdi',      initials:'OG', dept:'Nursing B',   cluster:'C4', shift:'Night',    checkIn:'23:05', checkOut:'07:02', hours:'7h 57m', status:'present',  location:'King Salman Hospital' },
-  { id:'EMP-1099', name:'Sara Al-Mutairi',     initials:'SM', dept:'Radiology',   cluster:'C2', shift:'Morning',  checkIn:'—',     checkOut:'—',      hours:'—',      status:'absent',   location:'—' },
-  { id:'EMP-1034', name:'Abdulaziz Al-Qahtani',initials:'AQ', dept:'Surgery',     cluster:'C1', shift:'Evening',  checkIn:'14:58', checkOut:'23:01', hours:'8h 03m', status:'present',  location:'King Fahad Hospital' },
-  { id:'EMP-1201', name:'Reem Al-Dossary',     initials:'RD', dept:'Pharmacy',    cluster:'C3', shift:'Morning',  checkIn:'—',     checkOut:'—',      hours:'—',      status:'absent',   location:'—' },
-  { id:'EMP-1067', name:'Majed Al-Otaibi',     initials:'MO', dept:'ICU',         cluster:'C1', shift:'Morning',  checkIn:'07:48', checkOut:'15:32', hours:'7h 44m', status:'present',  location:'King Fahad Hospital' },
-  { id:'EMP-1145', name:'Hessa Al-Shamsi',     initials:'HS', dept:'Pediatrics',  cluster:'C2', shift:'Morning',  checkIn:'09:22', checkOut:'—',      hours:'—',      status:'late',     location:'Maternity & Children' },
-  { id:'EMP-1188', name:'Turki Al-Zahrani',    initials:'TZ', dept:'Cardiology',  cluster:'C3', shift:'Flexible', checkIn:'08:10', checkOut:'16:05', hours:'7h 55m', status:'present',  location:'King Abdulaziz Hosp.' },
+  { id:'EMP-1041', name:'Fatimah Al-Dosari',   initials:'FA', dept:'ICU',        cluster:'C1', shift:'Morning',  shiftEnd:'15:00', checkIn:'08:58', checkOut:'16:02', hours:'7h 04m', status:'present', location:'King Fahad Hospital' },
+  { id:'EMP-1087', name:'Khalid Al-Harbi',     initials:'KH', dept:'Emergency',  cluster:'C2', shift:'Morning',  shiftEnd:'15:00', checkIn:'09:34', checkOut:'—',     hours:'—',      status:'late',    location:'Al-Noor Specialist' },
+  { id:'EMP-1023', name:'Nora Al-Shehri',      initials:'NS', dept:'Cardiology', cluster:'C3', shift:'Flexible', shiftEnd:'16:00', checkIn:'08:02', checkOut:'16:15', hours:'8h 13m', status:'present', location:'King Abdulaziz Hosp.' },
+  { id:'EMP-1156', name:'Omar Al-Ghamdi',      initials:'OG', dept:'Nursing B',  cluster:'C4', shift:'Night',    shiftEnd:'07:00', checkIn:'23:05', checkOut:'07:02', hours:'7h 57m', status:'present', location:'King Salman Hospital' },
+  { id:'EMP-1099', name:'Sara Al-Mutairi',     initials:'SM', dept:'Radiology',  cluster:'C2', shift:'Morning',  shiftEnd:'15:00', checkIn:'—',     checkOut:'—',     hours:'—',      status:'absent',  location:'—' },
+  { id:'EMP-1034', name:'Abdulaziz Al-Qahtani',initials:'AQ', dept:'Surgery',    cluster:'C1', shift:'Evening',  shiftEnd:'23:00', checkIn:'14:58', checkOut:'23:01', hours:'8h 03m', status:'present', location:'King Fahad Hospital' },
+  { id:'EMP-1201', name:'Reem Al-Dossary',     initials:'RD', dept:'Pharmacy',   cluster:'C3', shift:'Morning',  shiftEnd:'15:00', checkIn:'—',     checkOut:'—',     hours:'—',      status:'absent',  location:'—' },
+  { id:'EMP-1067', name:'Majed Al-Otaibi',     initials:'MO', dept:'ICU',        cluster:'C1', shift:'Morning',  shiftEnd:'15:00', checkIn:'07:48', checkOut:'15:32', hours:'7h 44m', status:'present', location:'King Fahad Hospital' },
+  { id:'EMP-1145', name:'Hessa Al-Shamsi',     initials:'HS', dept:'Pediatrics', cluster:'C2', shift:'Morning',  shiftEnd:'15:00', checkIn:'09:22', checkOut:'—',     hours:'—',      status:'late',    location:'Maternity & Children' },
+  { id:'EMP-1188', name:'Turki Al-Zahrani',    initials:'TZ', dept:'Cardiology', cluster:'C3', shift:'Flexible', shiftEnd:'16:00', checkIn:'08:10', checkOut:'16:05', hours:'7h 55m', status:'present', location:'King Abdulaziz Hosp.' },
 ];
+
+// Returns minutes after midnight for a "HH:MM" string
+function toMin(t) {
+  if (!t || t === '—') return null;
+  const [h, m] = t.split(':').map(Number);
+  return h * 60 + m;
+}
+
+// Determine sign-out status relative to scheduled shift end
+function signoutStatus(e) {
+  const out  = toMin(e.checkOut);
+  const end  = toMin(e.shiftEnd);
+  if (out === null || end === null) return null; // no checkout yet
+  const diff = out - end; // positive = late, negative = early
+  if (Math.abs(diff) <= 5) return { label:'On Time', chipClass:'chip-green', diff:0 };
+  if (diff > 5)  return { label:`+${diff} min late`,  chipClass:'chip-purple', diff };
+  return { label:`${Math.abs(diff)} min early`, chipClass:'chip-amber', diff };
+}
 
 const statusConfig = {
   present: { label:'Present',  chipClass:'chip-green',  dotClass:'dot-green' },
@@ -2381,11 +2256,40 @@ const statusConfig = {
   absent:  { label:'Absent',   chipClass:'chip-red',    dotClass:'dot-red'   },
 };
 
+// Shift library — hours only; days are defined by the Work System
 const shifts = [
-  { name:'Morning',  start:'07:00', end:'15:00', type:'Fixed',    days:'Sun–Thu', lateMin:15, color:'var(--brand)', bg:'var(--brand-light)' },
-  { name:'Evening',  start:'15:00', end:'23:00', type:'Fixed',    days:'Sun–Thu', lateMin:15, color:'var(--purple)', bg:'var(--purple-bg)' },
-  { name:'Night',    start:'23:00', end:'07:00', type:'Fixed',    days:'Sun–Thu', lateMin:20, color:'#334155',      bg:'#f1f5f9' },
-  { name:'Flexible', start:'08:00', end:'16:00', type:'Flexible', days:'Sun–Thu', lateMin:30, color:'var(--green)', bg:'var(--green-bg)' },
+  { name:'Morning',  from:'07:00', to:'15:00', lateMin:15, color:'var(--brand)',  bg:'var(--brand-light)' },
+  { name:'Evening',  from:'15:00', to:'23:00', lateMin:15, color:'var(--purple)', bg:'var(--purple-bg)'  },
+  { name:'Night',    from:'23:00', to:'07:00', lateMin:20, color:'#334155',       bg:'#f1f5f9'           },
+  { name:'Flexible', from:'08:00', to:'16:00', lateMin:30, color:'var(--green)',  bg:'var(--green-bg)'   },
+];
+
+// Work Systems — each has a name, day definition, and assigned shifts
+const workSystems = [
+  {
+    id:'ws1', name:'Standard Work Week', status:'active', clusters:4,
+    dayType:'recurring', days:['Sun','Mon','Tue','Wed','Thu'],
+    shifts:['Morning','Evening'],
+    desc:'Default HRCo schedule for all clinical and administrative staff.'
+  },
+  {
+    id:'ws2', name:'Weekend Shift', status:'active', clusters:2,
+    dayType:'recurring', days:['Fri','Sat'],
+    shifts:['Morning','Night'],
+    desc:'Covers Friday and Saturday rotations for emergency and on-call departments.'
+  },
+  {
+    id:'ws3', name:'Ramadan Schedule', status:'active', clusters:4,
+    dayType:'range', dateFrom:'2026-02-29', dateTo:'2026-03-29',
+    shifts:['Flexible'],
+    desc:'Reduced-hours schedule during the holy month of Ramadan per HRCo policy.'
+  },
+  {
+    id:'ws4', name:'On-Call System', status:'draft', clusters:0,
+    dayType:'recurring', days:['Sun','Mon','Tue','Wed','Thu','Fri','Sat'],
+    shifts:[],
+    desc:'Pending HRCo confirmation. Will cover specialist physician on-call hours.'
+  },
 ];
 
 let violations = [
@@ -2402,9 +2306,13 @@ let violations = [
 function renderAttendance() {
   const tbody = document.getElementById('attendanceTable');
   tbody.innerHTML = attendanceData.map(e => {
-    const sc = statusConfig[e.status];
-    const initBg = e.status==='present'?'#e0f2fe':e.status==='late'?'#fef3c7':'#fee2e2';
+    const sc  = statusConfig[e.status];
+    const sos = signoutStatus(e);
+    const initBg    = e.status==='present'?'#e0f2fe':e.status==='late'?'#fef3c7':'#fee2e2';
     const initColor = e.status==='present'?'#0098ce':e.status==='late'?'#92400e':'#dc2626';
+    const signoutCell = sos
+      ? `<span class="chip ${sos.chipClass}">${sos.label}</span>`
+      : `<span style="color:var(--text-muted);font-size:12px">—</span>`;
     return `
       <tr>
         <td>
@@ -2417,9 +2325,13 @@ function renderAttendance() {
           </div>
         </td>
         <td>${e.dept}</td>
-        <td><span class="chip chip-blue">${e.shift}</span></td>
+        <td>
+          <span class="chip chip-blue">${e.shift}</span>
+          <span style="font-size:11px;color:var(--text-muted);margin-left:4px">ends ${e.shiftEnd}</span>
+        </td>
         <td style="font-weight:600;color:${e.checkIn==='—'?'var(--text-muted)':'var(--text-primary)'}">${e.checkIn}</td>
-        <td style="color:${e.checkOut==='—'?'var(--text-muted)':'var(--text-secondary)'}">${e.checkOut}</td>
+        <td style="font-weight:600;color:${e.checkOut==='—'?'var(--text-muted)':sos&&sos.diff>5?'var(--purple)':'var(--text-primary)'}">${e.checkOut}</td>
+        <td>${signoutCell}</td>
         <td style="color:${e.hours==='—'?'var(--text-muted)':'var(--text-secondary)'}">${e.hours}</td>
         <td><span class="chip ${sc.chipClass}">${sc.label}</span></td>
         <td style="font-size:12px;color:var(--text-muted)">${e.location}</td>
@@ -2427,26 +2339,101 @@ function renderAttendance() {
   }).join('');
 }
 
-// ── Render shifts grid ───────────────────────────────────
+// ── Render shift library ──────────────────────────────────
 function renderShifts() {
   const grid = document.getElementById('shiftsGrid');
   grid.innerHTML = shifts.map(s => `
     <div class="shift-card">
       <div style="display:flex;align-items:center;justify-content:space-between">
-        <div class="shift-name">${s.name} Shift</div>
-        <span class="chip chip-${s.type==='Fixed'?'blue':'green'}">${s.type}</span>
+        <div class="shift-name">${s.name}</div>
+        <span style="font-size:11px;color:var(--text-muted);font-weight:600">SHIFT</span>
       </div>
-      <div class="shift-time" style="color:${s.color}">${s.start} – ${s.end}</div>
+      <div class="shift-time" style="color:${s.color}">${s.from} – ${s.to}</div>
       <div class="shift-meta">
-        <span>📅 ${s.days}</span>
-        <span>⏱ Late: +${s.lateMin} min</span>
+        <span>⏱ Late threshold: +${s.lateMin} min</span>
       </div>
-      <div style="display:flex;gap:6px;margin-top:4px">
-        <button class="btn btn-outline btn-sm" style="flex:1" onclick="openModal('assignModal')">Assign</button>
-        <button class="btn btn-outline btn-sm">Edit</button>
+      <div style="margin-top:6px;padding-top:8px;border-top:1px solid var(--border);font-size:11px;color:var(--text-muted)">
+        Used in: <strong style="color:var(--text-secondary)">${workSystems.filter(ws=>ws.shifts.includes(s.name)).map(ws=>ws.name).join(', ') || 'Not assigned'}</strong>
+      </div>
+      <div style="display:flex;gap:6px;margin-top:8px">
+        <button class="btn btn-outline btn-sm" style="flex:1">Edit</button>
         <button class="btn btn-danger btn-sm">Delete</button>
       </div>
     </div>`).join('');
+}
+
+// ── Render work systems ───────────────────────────────────
+function renderWorkSystems() {
+  const grid = document.getElementById('workSystemsGrid');
+  if (!grid) return;
+  grid.innerHTML = workSystems.map(ws => {
+    const isDraft   = ws.status === 'draft';
+    const dayLabel  = ws.dayType === 'recurring'
+      ? ws.days.join(' · ')
+      : `${ws.dateFrom} → ${ws.dateTo}`;
+    const dayIcon   = ws.dayType === 'recurring' ? '🔁' : '📆';
+    const shiftPills = ws.shifts.length
+      ? ws.shifts.map(sn => {
+          const s = shifts.find(x=>x.name===sn);
+          return s
+            ? `<span class="chip chip-blue" style="color:${s.color};background:${s.bg}">${sn} ${s.from}–${s.to}</span>`
+            : `<span class="chip chip-gray">${sn}</span>`;
+        }).join('')
+      : `<span class="chip chip-gray">No shifts assigned</span>`;
+
+    return `
+    <div class="ws-card" style="${isDraft?'opacity:.7':''}">
+      <div class="ws-icon" style="background:${isDraft?'var(--bg)':ws.dayType==='range'?'#fde8d8':'var(--brand-light)'}">
+        ${isDraft?'📁':dayIcon}
+      </div>
+      <div class="ws-body">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:8px">
+          <div>
+            <div class="ws-name">${ws.name}</div>
+            <div class="ws-desc" style="margin-top:4px">${ws.desc}</div>
+          </div>
+          <span class="chip ${isDraft?'chip-gray':ws.clusters>0?'chip-green':'chip-amber'}">
+            ${isDraft?'Draft':ws.clusters+' cluster'+(ws.clusters!==1?'s':'')+' active'}
+          </span>
+        </div>
+
+        <!-- Days row -->
+        <div style="display:flex;align-items:center;gap:8px;margin-top:10px;padding:8px 10px;background:var(--bg);border-radius:var(--radius-sm)">
+          <span style="font-size:13px">${dayIcon}</span>
+          <span style="font-size:12px;font-weight:600;color:var(--text-secondary)">
+            ${ws.dayType==='recurring'?'Recurring:':'Date range:'}
+          </span>
+          <span style="font-size:12px;color:var(--text-primary);font-weight:700">${dayLabel}</span>
+        </div>
+
+        <!-- Assigned shifts -->
+        <div style="margin-top:10px">
+          <div style="font-size:11px;color:var(--text-muted);font-weight:600;margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em">Assigned Shifts</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+            ${shiftPills}
+            <button class="btn btn-outline btn-sm" onclick="openModal('wsModal')" style="margin-left:4px">+ Add Shift</button>
+          </div>
+        </div>
+
+        <div class="ws-tags" style="margin-top:8px">
+          <span class="chip chip-gray">📋 ${ws.dayType==='recurring'?'Recurring':'Date range'}</span>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0;margin-left:8px">
+        <button class="btn btn-outline btn-sm" onclick="openModal('wsModal')">Edit</button>
+        ${isDraft
+          ? `<button class="btn btn-success btn-sm" onclick="showToast('Work system activated','success')">Activate</button>`
+          : `<button class="btn btn-danger btn-sm" onclick="showToast('Work system deactivated','info')">Deactivate</button>`
+        }
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── WS day type toggle ────────────────────────────────────
+function toggleWsDayType(val) {
+  document.getElementById('wsRecurringSection').style.display = val==='recurring' ? '' : 'none';
+  document.getElementById('wsRangeSection').style.display     = val==='range'     ? '' : 'none';
 }
 
 // ── Render violations ────────────────────────────────────
@@ -2640,6 +2627,7 @@ pageMeta.employee     = { title:'My Attendance',        subtitle:'Khalid Al-Harb
 // ── Init ──────────────────────────────────────────────────
 renderAttendance();
 renderShifts();
+renderWorkSystems();
 renderViolations();
 </script>
 </body>
