@@ -1586,7 +1586,15 @@ tbody tr:hover td { background:#fafbfc; }
 
         <!-- Shifts panel -->
         <div id="wsShiftsPanel" style="display:none">
-          <div id="shiftsLibraryGrid" style="display:flex;flex-direction:column;gap:12px"></div>
+          <div class="card" style="padding:10px 14px;margin-bottom:0">
+            <div style="display:flex;align-items:center;gap:10px">
+              <label style="font-size:12px;font-weight:600;color:var(--text-secondary);white-space:nowrap">Work System</label>
+              <select class="form-input" id="shiftsWsFilter" onchange="renderAllShifts()" style="max-width:220px;height:32px;font-size:12px;padding:0 10px">
+                <option value="">All Work Systems</option>
+              </select>
+            </div>
+          </div>
+          <div id="shiftsLibraryGrid" style="display:flex;flex-direction:column;gap:12px;margin-top:12px"></div>
         </div>
 
         <!-- Assignments panel -->
@@ -1988,7 +1996,7 @@ tbody tr:hover td { background:#fafbfc; }
     </div>
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="closeModal('shiftModal')">Cancel</button>
-      <button class="btn btn-primary" onclick="addShift()">Create Shift</button>
+      <button class="btn btn-primary" id="shiftModalSaveBtn" onclick="saveShiftModal()">Create Shift</button>
     </div>
   </div>
 </div>
@@ -2720,16 +2728,20 @@ function showToast(msg, type='info') {
 }
 
 // ── Shifts (owned by Work System) ─────────────────────────────────────────────
+let _editingShift = null; // { wsId, shiftId } when editing, null when creating
+
 function toggleFlexibleHours(on) {
   document.getElementById('lateThresholdGroup').style.display = on ? 'none' : '';
 }
 
 function openShiftModal(preWsId) {
+  _editingShift = null;
   const wsSel = document.getElementById('newShiftWsSelect');
   wsSel.innerHTML = '<option value="">— Select Work System —</option>' +
     workSystems.filter(ws => ws.status !== 'draft').map(ws =>
       `<option value="${ws.id}" ${ws.id === preWsId ? 'selected' : ''}>${ws.name}</option>`
     ).join('');
+  wsSel.disabled = false;
   const pre = preWsId ? workSystems.find(w => w.id === preWsId) : null;
   document.getElementById('shiftModalTitle').textContent = pre
     ? `Add Shift to "${pre.name}"`
@@ -2739,27 +2751,73 @@ function openShiftModal(preWsId) {
   document.getElementById('newShiftTo').value      = '15:00';
   document.getElementById('newShiftLate').value     = '15';
   document.getElementById('newShiftFlexible').checked = false;
+  document.getElementById('shiftModalSaveBtn').textContent = 'Create Shift';
   toggleFlexibleHours(false);
   openModal('shiftModal');
 }
 
-function addShift() {
+function openEditShiftModal(wsId, shiftId) {
+  const ws = workSystems.find(w => w.id === wsId);
+  const s  = ws && ws.shifts.find(sh => sh.id === shiftId);
+  if (!ws || !s) return;
+  _editingShift = { wsId, shiftId };
+  const wsSel = document.getElementById('newShiftWsSelect');
+  wsSel.innerHTML = workSystems.filter(w => w.status !== 'draft').map(w =>
+    `<option value="${w.id}" ${w.id === wsId ? 'selected' : ''}>${w.name}</option>`
+  ).join('');
+  wsSel.disabled = true; // WS cannot change on edit
+  document.getElementById('shiftModalTitle').textContent = `Edit Shift — ${s.name}`;
+  document.getElementById('newShiftName').value    = s.name;
+  document.getElementById('newShiftFlexible').checked = !!s.flexible;
+  toggleFlexibleHours(!!s.flexible);
+  document.getElementById('newShiftFrom').value    = s.from || '07:00';
+  document.getElementById('newShiftTo').value      = s.to   || '15:00';
+  document.getElementById('newShiftLate').value     = s.lateMin || 15;
+  document.getElementById('shiftModalSaveBtn').textContent = 'Save Changes';
+  openModal('shiftModal');
+}
+
+function saveShiftModal() {
+  if (_editingShift) {
+    _applyEditShift();
+  } else {
+    _applyAddShift();
+  }
+}
+
+function _applyAddShift() {
   const wsId    = document.getElementById('newShiftWsSelect').value;
   const ws      = workSystems.find(w => w.id === wsId);
   const name    = (document.getElementById('newShiftName').value || '').trim();
   const from    = document.getElementById('newShiftFrom').value  || '07:00';
   const to      = document.getElementById('newShiftTo').value    || '15:00';
   const lateMin = parseInt(document.getElementById('newShiftLate').value) || 15;
-
+  const flexible = document.getElementById('newShiftFlexible').checked;
   if (!wsId)  { showToast('Please select a Work System', 'error'); return; }
   if (!name)  { showToast('Please enter a shift name', 'error'); return; }
-
-  const flexible = document.getElementById('newShiftFlexible').checked;
   ws.shifts.push({ id: wsId + '-s' + Date.now(), name, from: flexible ? '' : from, to: flexible ? '' : to, lateMin: flexible ? 0 : lateMin, flexible });
   closeModal('shiftModal');
   renderWorkSystems();
   renderAllShifts();
   showToast(`Shift "${name}" added to ${ws.name}`, 'success');
+}
+
+function _applyEditShift() {
+  const { wsId, shiftId } = _editingShift;
+  const ws  = workSystems.find(w => w.id === wsId);
+  const idx = ws && ws.shifts.findIndex(sh => sh.id === shiftId);
+  if (!ws || idx < 0) return;
+  const name    = (document.getElementById('newShiftName').value || '').trim();
+  const from    = document.getElementById('newShiftFrom').value  || '07:00';
+  const to      = document.getElementById('newShiftTo').value    || '15:00';
+  const lateMin = parseInt(document.getElementById('newShiftLate').value) || 15;
+  const flexible = document.getElementById('newShiftFlexible').checked;
+  if (!name)  { showToast('Please enter a shift name', 'error'); return; }
+  ws.shifts[idx] = { ...ws.shifts[idx], name, from: flexible ? '' : from, to: flexible ? '' : to, lateMin: flexible ? 0 : lateMin, flexible };
+  closeModal('shiftModal');
+  renderWorkSystems();
+  renderAllShifts();
+  showToast(`Shift "${name}" updated`, 'success');
 }
 
 function deleteShift(wsId, shiftId) {
@@ -2909,51 +2967,59 @@ function switchWsTab(tab) {
 function renderAllShifts() {
   const grid = document.getElementById('shiftsLibraryGrid');
   if (!grid) return;
+
+  // Update filter dropdown
+  const filterSel = document.getElementById('shiftsWsFilter');
+  const selectedWsId = filterSel ? filterSel.value : '';
+  if (filterSel) {
+    const cur = filterSel.value;
+    filterSel.innerHTML = '<option value="">All Work Systems</option>' +
+      workSystems.map(ws => `<option value="${ws.id}" ${ws.id===cur?'selected':''}>${ws.name}</option>`).join('');
+    filterSel.value = cur;
+  }
+
   const total = workSystems.reduce((n, ws) => n + ws.shifts.length, 0);
   const badge = document.getElementById('shiftsBadge');
   if (badge) badge.textContent = total;
-  if (!total) {
-    grid.innerHTML = `<div class="card" style="padding:40px;text-align:center"><div style="font-size:32px;margin-bottom:8px">⏰</div><div style="font-size:14px;font-weight:600;color:var(--text-primary)">No shifts defined yet</div><div style="font-size:12px;color:var(--text-muted);margin-top:4px">Add shifts to a Work System from the Work Systems tab.</div></div>`;
+
+  // Collect all shifts (flat), optionally filtered by WS
+  const allShifts = [];
+  workSystems.forEach(ws => {
+    if (selectedWsId && ws.id !== selectedWsId) return;
+    ws.shifts.forEach(s => allShifts.push({ ws, s }));
+  });
+
+  if (!allShifts.length) {
+    grid.innerHTML = `<div class="card" style="padding:40px;text-align:center"><div style="font-size:32px;margin-bottom:8px">⏰</div><div style="font-size:14px;font-weight:600;color:var(--text-primary)">${total ? 'No shifts in selected Work System' : 'No shifts defined yet'}</div><div style="font-size:12px;color:var(--text-muted);margin-top:4px">${total ? 'Try clearing the filter.' : 'Add shifts to a Work System from the Work Systems tab.'}</div></div>`;
     return;
   }
-  grid.innerHTML = workSystems
-    .filter(ws => ws.shifts.length > 0)
-    .map(ws => {
-      const dayLabel = ws.dayType === 'recurring' ? ws.days.join(' · ') : `${ws.dateFrom} → ${ws.dateTo}`;
-      const rows = ws.shifts.map(s => {
-        const sc = shiftColor(s.name, ws.shifts);
-        const assignCount = shiftAssignments.filter(a => a.workSystem === ws.name && a.shift === s.name).length;
-        return `
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border)">
-          <div style="display:flex;align-items:center;gap:12px">
-            <div style="width:10px;height:10px;border-radius:50%;background:${sc.color};flex-shrink:0"></div>
-            <div>
-              <div style="font-size:13px;font-weight:600;color:var(--text-primary)">${s.name}</div>
-              <div style="font-size:11px;color:var(--text-muted);margin-top:1px">${s.flexible ? 'Flexible hours' : s.from+' – '+s.to+' &nbsp;&middot;&nbsp; Late threshold: +'+s.lateMin+' min'}</div>
-            </div>
-          </div>
-          <div style="display:flex;align-items:center;gap:10px">
-            <span style="font-size:11px;color:var(--text-muted)">${assignCount} assigned</span>
-            <button class="btn btn-outline btn-sm" onclick="openAssignModal('${s.name}','${ws.id}')">Assign</button>
-            <button class="btn btn-danger btn-sm" onclick="deleteShift('${ws.id}','${s.id}')">Delete</button>
-          </div>
-        </div>`;
-      }).join('');
-      return `
-      <div class="card">
-        <div class="card-header">
+
+  grid.innerHTML = allShifts.map(({ ws, s }) => {
+    const sc = shiftColor(s.name, ws.shifts);
+    const assignCount = shiftAssignments.filter(a => a.workSystem === ws.name && a.shift === s.name).length;
+    return `
+    <div class="card" style="padding:0;overflow:hidden">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px">
+        <div style="display:flex;align-items:center;gap:12px">
+          <div style="width:10px;height:10px;border-radius:50%;background:${sc.color};flex-shrink:0"></div>
           <div>
-            <div class="card-title">${ws.name}</div>
-            <div class="card-subtitle">${ws.dayType==='recurring'?'Recurring':'Date range'} · ${dayLabel}</div>
-          </div>
-          <div class="card-actions">
-            <span class="chip chip-blue">${ws.shifts.length} shift${ws.shifts.length!==1?'s':''}</span>
-            <button class="btn btn-outline btn-sm" onclick="openShiftModal('${ws.id}')">+ Add Shift</button>
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+              <span style="font-size:13px;font-weight:600;color:var(--text-primary)">${s.name}</span>
+              <span style="font-size:11px;font-weight:600;background:var(--brand-light);color:var(--brand);border-radius:4px;padding:2px 7px">${ws.name}</span>
+              ${s.flexible ? '<span style="font-size:11px;font-weight:600;background:var(--purple-bg);color:var(--purple);border-radius:4px;padding:2px 7px">Flexible</span>' : ''}
+            </div>
+            <div style="font-size:11px;color:var(--text-muted);margin-top:3px">${s.flexible ? 'Employee sets own hours' : s.from+' – '+s.to+' &nbsp;&middot;&nbsp; Late threshold: +'+s.lateMin+' min'}</div>
           </div>
         </div>
-        ${rows}
-      </div>`;
-    }).join('');
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:11px;color:var(--text-muted)">${assignCount} assigned</span>
+          <button class="btn btn-outline btn-sm" onclick="openAssignModal('${s.name}','${ws.id}')">Assign</button>
+          <button class="btn btn-outline btn-sm" onclick="openEditShiftModal('${ws.id}','${s.id}')">Edit</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteShift('${ws.id}','${s.id}')">Delete</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
 }
 
 function populateAssignmentFilters() {
