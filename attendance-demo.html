@@ -1569,6 +1569,10 @@ tbody tr:hover td { background:#fafbfc; }
         <!-- Sub-tabs -->
         <div style="display:flex;gap:0;border-bottom:2px solid var(--border)">
           <button class="shift-tab active" id="ws-tab-systems" onclick="switchWsTab('systems')">Work Systems</button>
+          <button class="shift-tab" id="ws-tab-shifts" onclick="switchWsTab('shifts')">
+            Shifts
+            <span id="shiftsBadge" style="background:var(--bg);color:var(--text-muted);font-size:10px;font-weight:700;padding:2px 6px;border-radius:10px;margin-left:6px">0</span>
+          </button>
           <button class="shift-tab" id="ws-tab-assignments" onclick="switchWsTab('assignments')">
             Employee Assignments
             <span class="nav-badge" style="position:static;margin-left:6px" id="assignmentsBadge">0</span>
@@ -1578,6 +1582,11 @@ tbody tr:hover td { background:#fafbfc; }
         <!-- Work Systems panel -->
         <div id="wsSystemsPanel">
           <div id="workSystemsGrid" style="display:flex;flex-direction:column;gap:12px"></div>
+        </div>
+
+        <!-- Shifts panel -->
+        <div id="wsShiftsPanel" style="display:none">
+          <div id="shiftsLibraryGrid" style="display:flex;flex-direction:column;gap:12px"></div>
         </div>
 
         <!-- Assignments panel -->
@@ -1951,19 +1960,30 @@ tbody tr:hover td { background:#fafbfc; }
         <label class="form-label">Shift Name <span style="color:var(--red)">*</span></label>
         <input class="form-input" id="newShiftName" type="text" placeholder="e.g. Morning, Night, On-Call">
       </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">From (Start Time)</label>
-          <input class="form-input" id="newShiftFrom" type="time" value="07:00">
-        </div>
-        <div class="form-group">
-          <label class="form-label">To (End Time)</label>
-          <input class="form-input" id="newShiftTo" type="time" value="15:00">
-        </div>
-      </div>
       <div class="form-group">
-        <label class="form-label">Late Threshold (minutes after start)</label>
-        <input class="form-input" id="newShiftLate" type="number" value="15" min="0" max="120">
+        <label class="form-label" style="display:flex;align-items:center;justify-content:space-between">
+          <span>Flexible Hours</span>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-weight:400">
+            <input type="checkbox" id="newShiftFlexible" onchange="toggleFlexibleHours(this.checked)" style="accent-color:var(--brand);width:14px;height:14px">
+            <span style="font-size:12px;color:var(--text-secondary)">Employee sets own hours</span>
+          </label>
+        </label>
+      </div>
+      <div id="shiftHoursSection">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">From (Start Time)</label>
+            <input class="form-input" id="newShiftFrom" type="time" value="07:00">
+          </div>
+          <div class="form-group">
+            <label class="form-label">To (End Time)</label>
+            <input class="form-input" id="newShiftTo" type="time" value="15:00">
+          </div>
+        </div>
+        <div class="form-group" id="lateThresholdGroup">
+          <label class="form-label">Late Threshold (minutes after start)</label>
+          <input class="form-input" id="newShiftLate" type="number" value="15" min="0" max="120">
+        </div>
       </div>
     </div>
     <div class="modal-footer">
@@ -2524,8 +2544,8 @@ function renderWorkSystems() {
           <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 10px;background:${sc.bg};border-radius:var(--radius-sm);margin-bottom:4px">
             <div style="display:flex;align-items:center;gap:8px">
               <span style="font-size:12px;font-weight:700;color:${sc.color}">${s.name}</span>
-              <span style="font-size:11px;color:var(--text-secondary)">${s.from} – ${s.to}</span>
-              <span style="font-size:10px;color:var(--text-muted)">⏱ +${s.lateMin} min late</span>
+              <span style="font-size:11px;color:var(--text-secondary)">${s.flexible ? 'Flexible hours' : s.from+' – '+s.to}</span>
+              ${!s.flexible ? `<span style="font-size:10px;color:var(--text-muted)">⏱ +${s.lateMin} min late</span>` : '<span style="font-size:10px;background:var(--green-bg);color:var(--green);padding:1px 6px;border-radius:10px">Flexible</span>'}
             </div>
             <div style="display:flex;align-items:center;gap:5px">
               <span style="font-size:11px;color:var(--text-muted)">${assignCount} assigned</span>
@@ -2700,6 +2720,10 @@ function showToast(msg, type='info') {
 }
 
 // ── Shifts (owned by Work System) ─────────────────────────────────────────────
+function toggleFlexibleHours(on) {
+  document.getElementById('lateThresholdGroup').style.display = on ? 'none' : '';
+}
+
 function openShiftModal(preWsId) {
   const wsSel = document.getElementById('newShiftWsSelect');
   wsSel.innerHTML = '<option value="">— Select Work System —</option>' +
@@ -2710,10 +2734,12 @@ function openShiftModal(preWsId) {
   document.getElementById('shiftModalTitle').textContent = pre
     ? `Add Shift to "${pre.name}"`
     : 'New Shift';
-  document.getElementById('newShiftName').value = '';
-  document.getElementById('newShiftFrom').value = '07:00';
-  document.getElementById('newShiftTo').value   = '15:00';
-  document.getElementById('newShiftLate').value  = '15';
+  document.getElementById('newShiftName').value    = '';
+  document.getElementById('newShiftFrom').value    = '07:00';
+  document.getElementById('newShiftTo').value      = '15:00';
+  document.getElementById('newShiftLate').value     = '15';
+  document.getElementById('newShiftFlexible').checked = false;
+  toggleFlexibleHours(false);
   openModal('shiftModal');
 }
 
@@ -2728,9 +2754,11 @@ function addShift() {
   if (!wsId)  { showToast('Please select a Work System', 'error'); return; }
   if (!name)  { showToast('Please enter a shift name', 'error'); return; }
 
-  ws.shifts.push({ id: wsId + '-s' + Date.now(), name, from, to, lateMin });
+  const flexible = document.getElementById('newShiftFlexible').checked;
+  ws.shifts.push({ id: wsId + '-s' + Date.now(), name, from: flexible ? '' : from, to: flexible ? '' : to, lateMin: flexible ? 0 : lateMin, flexible });
   closeModal('shiftModal');
   renderWorkSystems();
+  renderAllShifts();
   showToast(`Shift "${name}" added to ${ws.name}`, 'success');
 }
 
@@ -2740,6 +2768,7 @@ function deleteShift(wsId, shiftId) {
   const s = ws.shifts.find(sh => sh.id === shiftId);
   ws.shifts = ws.shifts.filter(sh => sh.id !== shiftId);
   renderWorkSystems();
+  renderAllShifts();
   showToast(`Shift "${s?.name}" removed`, 'info');
 }
 
@@ -2861,16 +2890,70 @@ function editAssignment(id) {
   openAssignModal();
   showToast('Edit mode — changes not wired in demo','info');
 }
-// ── Shift sub-tab switch ──────────────────────────────────
 // ── Work System sub-tab switch ─────────────────────────────────
 function switchWsTab(tab) {
-  document.getElementById('ws-tab-systems').classList.toggle('active',     tab==='systems');
-  document.getElementById('ws-tab-assignments').classList.toggle('active', tab==='assignments');
-  document.getElementById('wsSystemsPanel').style.display     = tab==='systems'     ? '' : 'none';
-  document.getElementById('wsAssignmentsPanel').style.display  = tab==='assignments' ? '' : 'none';
+  ['systems','shifts','assignments'].forEach(t => {
+    const btn = document.getElementById('ws-tab-'+t);
+    if (btn) btn.classList.toggle('active', t===tab);
+  });
+  document.getElementById('wsSystemsPanel').style.display    = tab==='systems'     ? '' : 'none';
+  document.getElementById('wsShiftsPanel').style.display     = tab==='shifts'      ? '' : 'none';
+  document.getElementById('wsAssignmentsPanel').style.display = tab==='assignments' ? '' : 'none';
   const btnAssign = document.getElementById('btnAssignEmp');
   if (btnAssign) btnAssign.style.display = tab==='assignments' ? '' : 'none';
   if (tab==='assignments') { populateAssignmentFilters(); renderAssignmentsTable(); }
+  if (tab==='shifts')      renderAllShifts();
+}
+
+// ── Render all shifts (grouped by Work System) ───────────────────
+function renderAllShifts() {
+  const grid = document.getElementById('shiftsLibraryGrid');
+  if (!grid) return;
+  const total = workSystems.reduce((n, ws) => n + ws.shifts.length, 0);
+  const badge = document.getElementById('shiftsBadge');
+  if (badge) badge.textContent = total;
+  if (!total) {
+    grid.innerHTML = `<div class="card" style="padding:40px;text-align:center"><div style="font-size:32px;margin-bottom:8px">⏰</div><div style="font-size:14px;font-weight:600;color:var(--text-primary)">No shifts defined yet</div><div style="font-size:12px;color:var(--text-muted);margin-top:4px">Add shifts to a Work System from the Work Systems tab.</div></div>`;
+    return;
+  }
+  grid.innerHTML = workSystems
+    .filter(ws => ws.shifts.length > 0)
+    .map(ws => {
+      const dayLabel = ws.dayType === 'recurring' ? ws.days.join(' · ') : `${ws.dateFrom} → ${ws.dateTo}`;
+      const rows = ws.shifts.map(s => {
+        const sc = shiftColor(s.name, ws.shifts);
+        const assignCount = shiftAssignments.filter(a => a.workSystem === ws.name && a.shift === s.name).length;
+        return `
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border)">
+          <div style="display:flex;align-items:center;gap:12px">
+            <div style="width:10px;height:10px;border-radius:50%;background:${sc.color};flex-shrink:0"></div>
+            <div>
+              <div style="font-size:13px;font-weight:600;color:var(--text-primary)">${s.name}</div>
+              <div style="font-size:11px;color:var(--text-muted);margin-top:1px">${s.flexible ? 'Flexible hours' : s.from+' – '+s.to+' &nbsp;&middot;&nbsp; Late threshold: +'+s.lateMin+' min'}</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <span style="font-size:11px;color:var(--text-muted)">${assignCount} assigned</span>
+            <button class="btn btn-outline btn-sm" onclick="openAssignModal('${s.name}','${ws.id}')">Assign</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteShift('${ws.id}','${s.id}')">Delete</button>
+          </div>
+        </div>`;
+      }).join('');
+      return `
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">${ws.name}</div>
+            <div class="card-subtitle">${ws.dayType==='recurring'?'Recurring':'Date range'} · ${dayLabel}</div>
+          </div>
+          <div class="card-actions">
+            <span class="chip chip-blue">${ws.shifts.length} shift${ws.shifts.length!==1?'s':''}</span>
+            <button class="btn btn-outline btn-sm" onclick="openShiftModal('${ws.id}')">+ Add Shift</button>
+          </div>
+        </div>
+        ${rows}
+      </div>`;
+    }).join('');
 }
 
 function populateAssignmentFilters() {
@@ -2944,7 +3027,7 @@ function updateShiftPreview() {
   preview.style.display = 'block';
   preview.style.background = sc.bg;
   preview.style.color = sc.color;
-  preview.textContent = `${s.name} · ${s.from} – ${s.to} · Late threshold: +${s.lateMin} min`;
+  preview.textContent = `${s.name} · ${s.flexible ? 'Flexible hours' : s.from+' – '+s.to} ${s.flexible ? '' : '· Late threshold: +'+s.lateMin+' min'}`;
 }
 // ── Scope switch ──────────────────────────────────────────
 let _currentScope = 'employee';
