@@ -1542,7 +1542,7 @@
       flex-shrink: 0;
     }
 
-    /* ── Day pill (work system modal) ───────────────────────── */
+    /* ── Day pill (work plan modal) ───────────────────────── */
     .day-pill {
       display: inline-flex;
       align-items: center;
@@ -1654,7 +1654,7 @@
             <rect x="2" y="9" width="5" height="5" rx="1.5" stroke="currentColor" stroke-width="1.5" />
             <rect x="9" y="9" width="5" height="5" rx="1.5" stroke="currentColor" stroke-width="1.5" />
           </svg>
-          Work Systems
+          Work Plans
         </div>
         <div class="nav-item" onclick="navigate('disciplinary', this)">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
@@ -1673,6 +1673,15 @@
               stroke-linejoin="round" />
           </svg>
           Reports
+        </div>
+        <div class="nav-item" id="navTimekeeper" onclick="navigate('timekeeper', this)" style="display:none">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <circle cx="6" cy="5" r="2.5" stroke="currentColor" stroke-width="1.4"/>
+            <path d="M1 13C1 10.5 3.2 8.5 6 8.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+            <circle cx="11" cy="10" r="3.5" stroke="currentColor" stroke-width="1.4"/>
+            <path d="M11 8.5V10L12 11" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+          </svg>
+          Timekeeper
         </div>
       </nav>
 
@@ -2573,8 +2582,8 @@
 
           <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
             <div>
-              <div style="font-size:15px;font-weight:700">Work Systems</div>
-              <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Each work system defines
+              <div style="font-size:15px;font-weight:700">Work Plans</div>
+              <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Each work plan defines
                 <strong>days</strong> it covers. Shifts (hours) live inside each system.
               </div>
             </div>
@@ -2587,10 +2596,19 @@
                 </svg>
                 Assign Employee
               </button>
+              <button class="btn btn-outline" id="btnNewHoliday" onclick="openHolidayModal()" style="display:none">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                  <rect x="1" y="3" width="12" height="10" rx="1.5" stroke="currentColor" stroke-width="1.5"/>
+                  <path d="M4 1V4M10 1V4M1 7H13" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                </svg>
+                New Holiday Calendar
+              </button>
               <button class="btn btn-outline" id="btnNewRotation" onclick="openRotationModal()" style="display:none">
                 <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                  <path d="M7 1.5A5.5 5.5 0 1 1 1.5 7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-                  <path d="M1.5 3.5V7H5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M7 1.5A5.5 5.5 0 1 1 1.5 7" stroke="currentColor" stroke-width="1.6"
+                    stroke-linecap="round" />
+                  <path d="M1.5 3.5V7H5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"
+                    stroke-linejoin="round" />
                 </svg>
                 New Rotation Plan
               </button>
@@ -2604,14 +2622,14 @@
                 <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                   <path d="M7 2V12M2 7H12" stroke="white" stroke-width="1.8" stroke-linecap="round" />
                 </svg>
-                New Work System
+                New Work Plan
               </button>
             </div>
           </div>
 
           <!-- Sub-tabs -->
           <div style="display:flex;gap:0;border-bottom:2px solid var(--border)">
-            <button class="shift-tab active" id="ws-tab-systems" onclick="switchWsTab('systems')">Work Systems</button>
+            <button class="shift-tab active" id="ws-tab-systems" onclick="switchWsTab('systems')">Work Plans</button>
             <button class="shift-tab" id="ws-tab-shifts" onclick="switchWsTab('shifts')">
               Shifts
               <span id="shiftsBadge"
@@ -2622,13 +2640,17 @@
               <span id="rotationBadge"
                 style="background:var(--bg);color:var(--text-muted);font-size:10px;font-weight:700;padding:2px 6px;border-radius:10px;margin-left:6px">0</span>
             </button>
+            <button class="shift-tab" id="ws-tab-holidays" onclick="switchWsTab('holidays')">
+              Holiday Calendar
+              <span id="holidaysBadge" style="background:var(--bg);color:var(--text-muted);font-size:10px;font-weight:700;padding:2px 6px;border-radius:10px;margin-left:6px">0</span>
+            </button>
             <button class="shift-tab" id="ws-tab-assignments" onclick="switchWsTab('assignments')">
               Employee Assignments
               <span class="nav-badge" style="position:static;margin-left:6px" id="assignmentsBadge">0</span>
             </button>
           </div>
 
-          <!-- Work Systems panel -->
+          <!-- Work Plans panel -->
           <div id="wsSystemsPanel">
             <div id="workSystemsGrid" style="display:flex;flex-direction:column;gap:12px"></div>
           </div>
@@ -2641,7 +2663,7 @@
                   System</label>
                 <select class="form-input" id="shiftsWsFilter" onchange="renderAllShifts()"
                   style="max-width:220px;height:32px;font-size:12px;padding:0 10px">
-                  <option value="">All Work Systems</option>
+                  <option value="">All Work Plans</option>
                 </select>
               </div>
             </div>
@@ -2651,6 +2673,11 @@
           <!-- Rotation Plans panel -->
           <div id="wsRotationPanel" style="display:none">
             <div id="rotationPlansGrid" style="display:flex;flex-direction:column;gap:14px;margin-top:4px"></div>
+          </div>
+
+          <!-- Holiday Calendar panel -->
+          <div id="wsHolidaysPanel" style="display:none">
+            <div id="holidayCalendarGrid" style="display:flex;flex-direction:column;gap:14px;margin-top:4px"></div>
           </div>
 
           <!-- Assignments panel -->
@@ -2666,7 +2693,7 @@
                     oninput="renderAssignmentsTable()">
                 </div>
                 <select class="select-filter" id="assignmentWsFilter" onchange="renderAssignmentsTable()">
-                  <option value="">All Work Systems</option>
+                  <option value="">All Work Plans</option>
                 </select>
                 <select class="select-filter" id="assignmentShiftFilter" onchange="renderAssignmentsTable()">
                   <option value="">All Shifts</option>
@@ -2683,7 +2710,7 @@
                   <thead>
                     <tr>
                       <th>Employee / Department</th>
-                      <th>Work System</th>
+                      <th>Work Plan</th>
                       <th>Shift</th>
                       <th>Hours</th>
                       <th>Effective From</th>
@@ -3081,10 +3108,113 @@
               </table>
             </div>
           </div>
+
+          <!-- ══ Timecard Approval ══ -->
+          <div class="card" style="margin-top:20px">
+            <div class="card-header" style="justify-content:space-between">
+              <div class="card-title">Timecard Approvals</div>
+              <div style="display:flex;gap:8px;align-items:center">
+                <select class="select-filter" id="tcApprovalWeekFilter" onchange="renderTimecardApprovals()">
+                  <option value="2026-04-06">Week of 6 Apr 2026</option>
+                  <option value="2026-03-30">Week of 30 Mar 2026</option>
+                  <option value="2026-03-23">Week of 23 Mar 2026</option>
+                </select>
+                <select class="select-filter" id="tcApprovalStatusFilter" onchange="renderTimecardApprovals()">
+                  <option value="">All Statuses</option>
+                  <option value="pending">Pending</option>
+                  <option value="approved">Approved</option>
+                  <option value="rejected">Rejected</option>
+                </select>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table id="tcApprovalTable">
+                <thead>
+                  <tr>
+                    <th>Employee</th>
+                    <th>ID</th>
+                    <th>Week</th>
+                    <th>Total Hrs</th>
+                    <th>OT Hrs</th>
+                    <th>Submitted</th>
+                    <th>Status</th>
+                    <th style="text-align:right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="tcApprovalBody">
+                  <tr>
+                    <td style="font-weight:600">Khalid Al-Harbi</td>
+                    <td style="color:var(--text-muted)">EMP-1087</td>
+                    <td>6–12 Apr</td>
+                    <td>38h 42m</td>
+                    <td style="color:var(--text-muted)">0h</td>
+                    <td style="color:var(--text-muted)">12 Apr 2026</td>
+                    <td><span class="chip chip-amber">Pending</span></td>
+                    <td style="text-align:right">
+                      <div style="display:flex;gap:6px;justify-content:flex-end">
+                        <button class="btn btn-sm" style="background:#dcfce7;color:#166534;border:1px solid #bbf7d0"
+                          onclick="approveTimecard('EMP-1087','2026-04-06')">Approve</button>
+                        <button class="btn btn-sm" style="background:#fee2e2;color:#991b1b;border:1px solid #fecaca"
+                          onclick="rejectTimecard('EMP-1087','2026-04-06')">Reject</button>
+                        <button class="btn btn-sm btn-outline"
+                          onclick="viewTimecardDetail('EMP-1087','2026-04-06')">View</button>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="font-weight:600">Sara Al-Mutairi</td>
+                    <td style="color:var(--text-muted)">EMP-1091</td>
+                    <td>6–12 Apr</td>
+                    <td>40h 15m</td>
+                    <td style="color:var(--amber);font-weight:600">2h 15m</td>
+                    <td style="color:var(--text-muted)">11 Apr 2026</td>
+                    <td><span class="chip chip-amber">Pending</span></td>
+                    <td style="text-align:right">
+                      <div style="display:flex;gap:6px;justify-content:flex-end">
+                        <button class="btn btn-sm" style="background:#dcfce7;color:#166534;border:1px solid #bbf7d0"
+                          onclick="approveTimecard('EMP-1091','2026-04-06')">Approve</button>
+                        <button class="btn btn-sm" style="background:#fee2e2;color:#991b1b;border:1px solid #fecaca"
+                          onclick="rejectTimecard('EMP-1091','2026-04-06')">Reject</button>
+                        <button class="btn btn-sm btn-outline"
+                          onclick="viewTimecardDetail('EMP-1091','2026-04-06')">View</button>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="font-weight:600">Omar Bin Nasser</td>
+                    <td style="color:var(--text-muted)">EMP-1094</td>
+                    <td>30 Mar–5 Apr</td>
+                    <td>39h 30m</td>
+                    <td style="color:var(--text-muted)">0h</td>
+                    <td style="color:var(--text-muted)">5 Apr 2026</td>
+                    <td><span class="chip chip-green">Approved</span></td>
+                    <td style="text-align:right">
+                      <button class="btn btn-sm btn-outline"
+                        onclick="viewTimecardDetail('EMP-1094','2026-03-30')">View</button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <!-- Bulk actions -->
+            <div style="padding:12px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px">
+              <button class="btn btn-sm btn-outline" onclick="approveAllTimecards()">Approve All Pending</button>
+            </div>
+          </div>
+
         </div>
 
         <!-- ══ EMPLOYEE VIEW (role switch) ══ -->
         <div class="view" id="view-employee">
+          <!-- Employee sub-tabs -->
+          <div style="display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:16px">
+            <button class="shift-tab active" id="emp-tab-attendance" onclick="switchEmpTab('attendance')">My Attendance</button>
+            <button class="shift-tab" id="emp-tab-timecard" onclick="switchEmpTab('timecard')">My Timecard</button>
+          </div>
+
+          <!-- Attendance Panel -->
+          <div id="empAttendancePanel">
+
           <div style="display:grid;grid-template-columns:320px 1fr;gap:16px;align-items:start">
 
             <!-- Mobile check-in card -->
@@ -3254,7 +3384,143 @@
               </div>
             </div>
           </div>
+          </div><!-- /empAttendancePanel -->
+
+          <!-- Timecard Panel -->
+          <div id="empTimecardPanel" style="display:none">
+            <div class="card">
+              <div class="card-header" style="justify-content:space-between">
+                <div class="card-title">My Timecard — Week of 6 Apr 2026</div>
+                <div style="display:flex;gap:8px;align-items:center">
+                  <button class="btn btn-sm btn-outline" onclick="prevTimecardWeek()">&#8249; Prev</button>
+                  <span id="tcWeekLabel" style="font-size:13px;font-weight:600;min-width:160px;text-align:center">6 Apr – 12 Apr 2026</span>
+                  <button class="btn btn-sm btn-outline" onclick="nextTimecardWeek()">Next &#8250;</button>
+                </div>
+              </div>
+              <div style="padding:0 20px 20px">
+                <!-- Summary row -->
+                <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px">
+                  <div style="background:var(--bg);border-radius:var(--radius-sm);padding:10px;text-align:center">
+                    <div style="font-size:20px;font-weight:700;color:var(--brand)" id="tcTotalHours">38h 42m</div>
+                    <div style="font-size:11px;color:var(--text-muted);margin-top:2px">Total Hours</div>
+                  </div>
+                  <div style="background:var(--bg);border-radius:var(--radius-sm);padding:10px;text-align:center">
+                    <div style="font-size:20px;font-weight:700;color:var(--green)" id="tcRegHours">40h 00m</div>
+                    <div style="font-size:11px;color:var(--text-muted);margin-top:2px">Regular</div>
+                  </div>
+                  <div style="background:var(--bg);border-radius:var(--radius-sm);padding:10px;text-align:center">
+                    <div style="font-size:20px;font-weight:700;color:var(--amber)" id="tcOTHours">0h 00m</div>
+                    <div style="font-size:11px;color:var(--text-muted);margin-top:2px">Overtime</div>
+                  </div>
+                  <div style="background:var(--bg);border-radius:var(--radius-sm);padding:10px;text-align:center">
+                    <div id="tcStatus" class="chip chip-amber" style="font-size:12px;margin:0 auto">Draft</div>
+                    <div style="font-size:11px;color:var(--text-muted);margin-top:6px">Status</div>
+                  </div>
+                </div>
+                <!-- Daily entry table -->
+                <div class="table-wrap">
+                  <table id="tcDailyTable">
+                    <thead>
+                      <tr>
+                        <th>Day</th>
+                        <th>Hours Type</th>
+                        <th>Check-In</th>
+                        <th>Check-Out</th>
+                        <th>Total</th>
+                        <th>Notes</th>
+                      </tr>
+                    </thead>
+                    <tbody id="tcDailyBody">
+                      <tr>
+                        <td style="font-weight:600">Sun 6 Apr</td>
+                        <td><span class="chip chip-green" style="font-size:11px">Regular</span></td>
+                        <td>08:28</td><td>16:30</td><td>8h 02m</td>
+                        <td style="color:var(--text-muted)">—</td>
+                      </tr>
+                      <tr>
+                        <td style="font-weight:600">Mon 7 Apr</td>
+                        <td><span class="chip chip-amber" style="font-size:11px">Late</span></td>
+                        <td style="color:var(--amber)">09:04</td><td>16:45</td><td>7h 41m</td>
+                        <td style="font-size:12px;color:var(--text-muted)">Late arrival</td>
+                      </tr>
+                      <tr>
+                        <td style="font-weight:600">Tue 8 Apr</td>
+                        <td><span class="chip chip-green" style="font-size:11px">Regular</span></td>
+                        <td>08:20</td><td>16:25</td><td>8h 05m</td>
+                        <td style="color:var(--text-muted)">—</td>
+                      </tr>
+                      <tr>
+                        <td style="font-weight:600">Wed 9 Apr</td>
+                        <td><span class="chip chip-green" style="font-size:11px">Regular</span></td>
+                        <td>08:15</td><td>16:35</td><td>8h 20m</td>
+                        <td style="color:var(--text-muted)">—</td>
+                      </tr>
+                      <tr>
+                        <td style="font-weight:600">Thu 10 Apr</td>
+                        <td><span class="chip chip-green" style="font-size:11px">Regular</span></td>
+                        <td>08:31</td><td>16:28</td><td>7h 57m</td>
+                        <td style="color:var(--text-muted)">—</td>
+                      </tr>
+                      <tr style="background:var(--bg-secondary)">
+                        <td style="font-weight:600;color:var(--text-muted)">Fri 11 Apr</td>
+                        <td><span class="chip" style="font-size:11px;background:#e5e7eb;color:#6b7280">Day Off</span></td>
+                        <td style="color:var(--text-muted)">—</td><td style="color:var(--text-muted)">—</td>
+                        <td style="color:var(--text-muted)">—</td><td style="color:var(--text-muted)">—</td>
+                      </tr>
+                      <tr style="background:var(--bg-secondary)">
+                        <td style="font-weight:600;color:var(--text-muted)">Sat 12 Apr</td>
+                        <td><span class="chip" style="font-size:11px;background:#e5e7eb;color:#6b7280">Day Off</span></td>
+                        <td style="color:var(--text-muted)">—</td><td style="color:var(--text-muted)">—</td>
+                        <td style="color:var(--text-muted)">—</td><td style="color:var(--text-muted)">—</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <!-- Submit row -->
+                <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:16px">
+                  <button class="btn btn-outline" onclick="showToast('Timecard saved as draft','success')">Save Draft</button>
+                  <button class="btn btn-primary" onclick="submitTimecard()">Submit for Approval</button>
+                </div>
+              </div>
+            </div>
+          </div><!-- /empTimecardPanel -->
+
         </div>
+
+
+        <!-- ══ TIMEKEEPER VIEW ══════════════════════════════════════ -->
+        <div class="view" id="view-timekeeper">
+          <div style="display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:16px">
+            <button class="shift-tab active" id="tk-tab-groups" onclick="switchTkTab('groups')">Timekeeper Groups</button>
+            <button class="shift-tab" id="tk-tab-entry" onclick="switchTkTab('entry')">Timekeeper Entry</button>
+          </div>
+          <!-- Groups panel -->
+          <div id="tkGroupsPanel">
+            <div style="display:flex;justify-content:flex-end;margin-bottom:12px">
+              <button class="btn btn-primary" onclick="openTkGroupModal()">+ New Group</button>
+            </div>
+            <div id="tkGroupsGrid" style="display:flex;flex-direction:column;gap:12px"></div>
+          </div>
+          <!-- Entry panel -->
+          <div id="tkEntryPanel" style="display:none">
+            <div class="card" style="padding:12px 16px;margin-bottom:12px">
+              <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+                <div class="form-group" style="margin:0;min-width:200px">
+                  <label class="form-label" style="margin-bottom:4px">Timekeeper Group</label>
+                  <select class="form-input" id="tkEntryGroupSel" onchange="loadTkEntryGrid()" style="height:32px;font-size:12px">
+                    <option value="">— Select Group —</option>
+                  </select>
+                </div>
+                <div class="form-group" style="margin:0">
+                  <label class="form-label" style="margin-bottom:4px">Week Starting</label>
+                  <input class="form-input" id="tkEntryWeekStart" type="date" style="height:32px;font-size:12px;padding:0 8px" onchange="loadTkEntryGrid()">
+                </div>
+              </div>
+            </div>
+            <div id="tkEntryGrid"></div>
+          </div>
+        </div>
+
 
       </div><!-- /page-body -->
     </main>
@@ -3276,13 +3542,13 @@
       <div class="modal-body">
         <div
           style="background:var(--brand-light);border:1px solid var(--brand-mid);border-radius:var(--radius-sm);padding:10px 12px;font-size:12px;color:var(--brand);line-height:1.5">
-          Shifts belong to a Work System. The Work System defines <strong>which days</strong> the shift runs; the shift
+          Shifts belong to a Work Plan. The Work Plan defines <strong>which days</strong> the shift runs; the shift
           defines <strong>what hours</strong>.
         </div>
         <div class="form-group">
-          <label class="form-label">Work System <span style="color:var(--red)">*</span></label>
+          <label class="form-label">Work Plan <span style="color:var(--red)">*</span></label>
           <select class="form-input" id="newShiftWsSelect">
-            <option value="">— Select Work System —</option>
+            <option value="">— Select Work Plan —</option>
           </select>
         </div>
         <div class="form-group">
@@ -3310,9 +3576,29 @@
               <input class="form-input" id="newShiftTo" type="time" value="15:00">
             </div>
           </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Early Start (min before shift)</label>
+              <input class="form-input" id="newShiftEarlyStart" type="number" value="15" min="0" max="120" placeholder="0">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Late Stop (min after shift)</label>
+              <input class="form-input" id="newShiftLateStop" type="number" value="30" min="0" max="180" placeholder="0">
+            </div>
+          </div>
           <div class="form-group" id="lateThresholdGroup">
-            <label class="form-label">Late Threshold (minutes after start)</label>
+            <label class="form-label">Late Threshold (min after start)</label>
             <input class="form-input" id="newShiftLate" type="number" value="15" min="0" max="120">
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Day Premium (%)</label>
+              <input class="form-input" id="newShiftDayPremium" type="number" value="0" min="0" max="100" placeholder="0">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Shift Diff Override (%)</label>
+              <input class="form-input" id="newShiftDiffOverride" type="number" value="0" min="0" max="100" placeholder="0">
+            </div>
           </div>
         </div>
       </div>
@@ -3336,12 +3622,12 @@
       </div>
       <div class="modal-body">
 
-        <!-- Step 1: Work System → Shift cascade -->
+        <!-- Step 1: Work Plan → Shift cascade -->
         <div style="display:flex;gap:8px;align-items:flex-end">
           <div class="form-group" style="flex:1">
-            <label class="form-label">Work System</label>
+            <label class="form-label">Work Plan</label>
             <select class="form-input" id="assignWsSelect" onchange="updateAssignShiftOptions()">
-              <option value="">— Select Work System —</option>
+              <option value="">— Select Work Plan —</option>
             </select>
           </div>
           <div class="form-group" style="flex:1">
@@ -3443,6 +3729,54 @@
         </div>
 
       </div>
+
+      <!-- ATI: Assignment Time Information -->
+      <div style="padding:16px 24px;border-top:1px solid var(--border);background:var(--bg-secondary)">
+        <div style="font-size:11px;font-weight:700;color:var(--text-muted);margin-bottom:12px;letter-spacing:.4px">ASSIGNMENT TIME INFORMATION (ATI)</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Autogen Hours</label>
+            <select class="form-input" id="atiAutogen">
+              <option value="no">No</option>
+              <option value="yes">Yes</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Rotation Plan</label>
+            <select class="form-input" id="atiRotationPlan">
+              <option value="">— None —</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Earning Policy</label>
+          <select class="form-input" id="atiEarningPolicy">
+            <option value="">— None —</option>
+            <option value="Standard Earning Policy">Standard Earning Policy</option>
+            <option value="Night Shift Earning Policy">Night Shift Earning Policy</option>
+            <option value="Weekend Earning Policy">Weekend Earning Policy</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Shift Differential Policy</label>
+            <select class="form-input" id="atiShiftDiffPolicy">
+              <option value="">— None —</option>
+              <option value="Standard Shift Differential">Standard Shift Differential</option>
+              <option value="Night Shift Differential">Night Shift Differential</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Hour Deduction Policy</label>
+            <select class="form-input" id="atiHourDeduction">
+              <option value="">— None —</option>
+              <option value="Standard Break Deduction">Standard Break Deduction</option>
+              <option value="No Deduction">No Deduction</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
       <div class="modal-footer">
         <button class="btn btn-outline" onclick="closeModal('assignModal')">Cancel</button>
         <button class="btn btn-primary" id="assignSubmitBtn" onclick="submitAssignment()">Assign Shift</button>
@@ -3549,11 +3883,11 @@
     </div>
   </div>
 
-  <!-- Work System Modal -->
+  <!-- Work Plan Modal -->
   <div class="modal-overlay" id="wsModal">
     <div class="modal" style="width:520px">
       <div class="modal-header">
-        <div class="modal-title">New Work System</div>
+        <div class="modal-title">New Work Plan</div>
         <button class="modal-close" onclick="closeModal('wsModal')">
           <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
             <path d="M1 1L11 11M11 1L1 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
@@ -3562,7 +3896,7 @@
       </div>
       <div class="modal-body">
         <div class="form-group">
-          <label class="form-label">Work System Name</label>
+          <label class="form-label">Work Plan Name</label>
           <input class="form-input" type="text" placeholder="e.g. Ramadan Schedule, Weekend Shift">
         </div>
 
@@ -3855,14 +4189,14 @@
       absent: { label: 'Absent', chipClass: 'chip-red', dotClass: 'dot-red' },
     };
 
-    // Work Systems — each owns its shifts. Shifts define hours; the WS defines which days apply.
+    // Work Plans — each owns its shifts. Shifts define hours; the WS defines which days apply.
     const workSystems = [
       {
         id: 'ws1', name: 'Standard Work Week', status: 'active', clusters: 4,
         dayType: 'recurring', days: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu'],
         shifts: [
-          { id: 'ws1-s1', name: 'Morning', from: '07:00', to: '15:00', lateMin: 15 },
-          { id: 'ws1-s2', name: 'Evening', from: '15:00', to: '23:00', lateMin: 15 },
+          { id: 'ws1-s1', name: 'Morning', from: '07:00', to: '15:00', lateMin: 15, earlyStart: 15, lateStop: 30, dayPremium: 0, shiftDiff: 0 },
+          { id: 'ws1-s2', name: 'Evening', from: '15:00', to: '23:00', lateMin: 15, earlyStart: 10, lateStop: 30, dayPremium: 5, shiftDiff: 0 },
         ],
         desc: 'Default HRCo schedule for all clinical and administrative staff.'
       },
@@ -3870,8 +4204,8 @@
         id: 'ws2', name: 'Weekend Shift', status: 'active', clusters: 2,
         dayType: 'recurring', days: ['Fri', 'Sat'],
         shifts: [
-          { id: 'ws2-s1', name: 'Morning', from: '07:00', to: '15:00', lateMin: 15 },
-          { id: 'ws2-s2', name: 'Night', from: '23:00', to: '07:00', lateMin: 20 },
+          { id: 'ws2-s1', name: 'Morning', from: '07:00', to: '15:00', lateMin: 15, earlyStart: 15, lateStop: 30, dayPremium: 0, shiftDiff: 0 },
+          { id: 'ws2-s2', name: 'Night', from: '23:00', to: '07:00', lateMin: 20, earlyStart: 10, lateStop: 60, dayPremium: 15, shiftDiff: 10 },
         ],
         desc: 'Covers Friday and Saturday rotations for emergency and on-call departments.'
       },
@@ -3879,7 +4213,7 @@
         id: 'ws3', name: 'Ramadan Schedule', status: 'active', clusters: 4,
         dayType: 'range', dateFrom: '2026-02-29', dateTo: '2026-03-29',
         shifts: [
-          { id: 'ws3-s1', name: 'Flexible', from: '08:00', to: '16:00', lateMin: 30 },
+          { id: 'ws3-s1', name: 'Flexible', from: '08:00', to: '16:00', lateMin: 30, earlyStart: 30, lateStop: 30, dayPremium: 0, shiftDiff: 0 },
         ],
         desc: 'Reduced-hours schedule during the holy month of Ramadan per HRCo policy.'
       },
@@ -3908,7 +4242,7 @@
     let rotationPlans = [
       {
         id: 'rp1', name: 'Clinical Staff Rotation Q2',
-        description: 'Bi-weekly rotation for clinical and admin staff across standard and weekend work systems.',
+        description: 'Bi-weekly rotation for clinical and admin staff across standard and weekend work plans.',
         startDate: '2026-04-13', endDate: '2026-06-30',
         weeks: [
           { id: 'rp1-w1', weekNum: 1, workSystemId: 'ws1', startDate: '2026-04-13' },
@@ -3964,9 +4298,9 @@
       }).join('');
     }
 
-    // renderShifts() removed — shifts now live inside each Work System
+    // renderShifts() removed — shifts now live inside each Work Plan
 
-    // ── Render work systems ─────────────────────────────────
+    // ── Render work plans ─────────────────────────────────
     function renderWorkSystems() {
       const grid = document.getElementById('workSystemsGrid');
       if (!grid) return;
@@ -4126,7 +4460,7 @@
         grid.innerHTML = `<div class="card" style="padding:48px;text-align:center">
           <div style="font-size:32px;margin-bottom:8px">🔄</div>
           <div style="font-size:14px;font-weight:600;color:var(--text-primary)">No rotation plans yet</div>
-          <div style="font-size:12px;color:var(--text-muted);margin-top:4px">Create a rotation plan to schedule recurring Work Systems for your staff.</div>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:4px">Create a rotation plan to schedule recurring Work Plans for your staff.</div>
         </div>`;
         return;
       }
@@ -4142,14 +4476,15 @@
               <div style="font-size:13px;font-weight:600;color:var(--text-primary)">${ws ? ws.name : '—'}</div>
               <div style="font-size:11px;color:var(--text-muted);margin-top:1px">${shiftNames ? 'Shifts: ' + shiftNames : 'No shifts'}</div>
             </div>
+            <span style="font-size:12px;color:var(--text-secondary)">${w.startDate || '—'}</span>
             <div style="display:flex;gap:6px">
               <button class="btn btn-outline btn-sm" onclick="openEditRotationModal('${rp.id}')">Edit</button>
             </div>
           </div>`;
         }).join('');
         const totalWeeks = rp.weeks.length;
-        const statusColor = rp.endDate && rp.endDate < new Date().toISOString().slice(0,10) ? 'var(--text-muted)' : 'var(--green)';
-        const statusLabel = rp.endDate && rp.endDate < new Date().toISOString().slice(0,10) ? 'Ended' : 'Active';
+        const statusColor = rp.endDate && rp.endDate < new Date().toISOString().slice(0, 10) ? 'var(--text-muted)' : 'var(--green)';
+        const statusLabel = rp.endDate && rp.endDate < new Date().toISOString().slice(0, 10) ? 'Ended' : 'Active';
         return `
         <div class="card" style="padding:0;overflow:hidden">
           <div class="card-header" style="padding:14px 16px">
@@ -4231,7 +4566,7 @@
           style="height:32px;font-size:12px;padding:0 8px">
         <select class="form-input" id="rpWeekWs-${num}" style="height:32px;font-size:12px;padding:0 8px"
           onchange="onRpWeekWsChange(${num})">
-          <option value="">— Select Work System —</option>
+          <option value="">— Select Work Plan —</option>
           ${wsOptions}
         </select>
         <button onclick="removeRotationWeekRow('${rowId}',${num})" style="width:28px;height:28px;border:none;background:none;cursor:pointer;color:var(--text-muted);font-size:16px;display:flex;align-items:center;justify-content:center;border-radius:4px" title="Remove">×</button>`;
@@ -4271,12 +4606,38 @@
       if (empty) empty.style.display = hasRows ? 'none' : '';
     }
 
+    function autogenerateRotationWeeks() {
+      const body = document.getElementById('rotationWeeksBody');
+      const num = parseInt(document.getElementById('rpNumRotations').value) || 4;
+      const startVal = document.getElementById('rpNextStartDate').value || document.getElementById('rpStartDate').value || '';
+      const activePlans = workSystems.filter(ws => ws.status !== 'draft');
+      if (!activePlans.length) { showToast('No active Work Plans to rotate through', 'error'); return; }
+      body.innerHTML = '';
+      _rpWeekCounter = 0;
+      let d = startVal ? new Date(startVal) : new Date();
+      for (let i = 0; i < num; i++) {
+        _rpWeekCounter++;
+        const ws = activePlans[i % activePlans.length];
+        const dateStr = d.toISOString().slice(0,10);
+        body.appendChild(_buildWeekRow(_rpWeekCounter, ws.id, dateStr));
+        d.setDate(d.getDate() + 7);
+      }
+      _syncWeeksEmpty();
+      showToast(`Generated ${num} week${num !== 1 ? 's' : ''}`, 'success');
+    }
+
+    function clearRotationWeeks() {
+      document.getElementById('rotationWeeksBody').innerHTML = '';
+      _rpWeekCounter = 0;
+      _syncWeeksEmpty();
+    }
+
     function saveRotationPlan() {
       const name = (document.getElementById('rpName').value || '').trim();
       const desc = (document.getElementById('rpDesc').value || '').trim();
       const startDate = document.getElementById('rpStartDate').value;
-      const endDate   = document.getElementById('rpEndDate').value;
-      if (!name)      { showToast('Please enter a plan name', 'error'); return; }
+      const endDate = document.getElementById('rpEndDate').value;
+      if (!name) { showToast('Please enter a plan name', 'error'); return; }
       if (!startDate) { showToast('Please select an effective start date', 'error'); return; }
 
       // Collect weeks from DOM rows
@@ -4284,10 +4645,10 @@
       const weeks = [];
       let valid = true;
       rows.forEach((r, i) => {
-        const wsSel  = r.querySelector('select');
+        const wsSel = r.querySelector('select');
         const dateFld = r.querySelector('input[type=date]');
-        if (!wsSel || !wsSel.value) { showToast(`Week ${i+1}: please select a Work System`, 'error'); valid = false; return; }
-        weeks.push({ id: (_editingRotationId || 'rp-new') + '-w' + (i+1), weekNum: i+1, workSystemId: wsSel.value, startDate: dateFld ? dateFld.value : '' });
+        if (!wsSel || !wsSel.value) { showToast(`Week ${i + 1}: please select a Work Plan`, 'error'); valid = false; return; }
+        weeks.push({ id: (_editingRotationId || 'rp-new') + '-w' + (i + 1), weekNum: i + 1, workSystemId: wsSel.value, startDate: dateFld ? dateFld.value : '' });
       });
       if (!valid) return;
 
@@ -4312,6 +4673,291 @@
       showToast(`"${rp?.name}" deleted`, 'info');
     }
 
+    // ── Holiday Calendars ─────────────────────────────────────────────────────
+    let holidayCalendars = [
+      {
+        id:'hc1', name:'Saudi National Holidays 2026',
+        description:'Official public holidays per Saudi Labor Law',
+        earningType:'Vacation Pay', organization:'Health Holding Company',
+        effectiveFrom:'2026-01-01', effectiveTo:'2026-12-31',
+        holidays:[
+          {name:'Founding Day',      date:'2026-02-22', hours:8},
+          {name:'Eid Al-Fitr Day 1', date:'2026-03-30', hours:8},
+          {name:'Eid Al-Fitr Day 2', date:'2026-03-31', hours:8},
+          {name:'Eid Al-Adha Day 1', date:'2026-06-06', hours:8},
+          {name:'Eid Al-Adha Day 2', date:'2026-06-07', hours:8},
+          {name:'National Day',      date:'2026-09-23', hours:8},
+        ]
+      },
+    ];
+
+    function renderHolidayCalendars() {
+      const grid = document.getElementById('holidayCalendarGrid');
+      if (!grid) return;
+      _syncHolidaysBadge();
+      if (!holidayCalendars.length) {
+        grid.innerHTML = '<div class="card" style="padding:48px;text-align:center"><div style="font-size:32px;margin-bottom:8px">📅</div><div style="font-size:14px;font-weight:600;color:var(--text-primary)">No holiday calendars yet</div><div style="font-size:12px;color:var(--text-muted);margin-top:4px">Create a holiday calendar to track paid and unpaid holidays.</div></div>';
+        return;
+      }
+      grid.innerHTML = holidayCalendars.map(hc => {
+        const rows = hc.holidays.map(h => `
+          <div style="display:grid;grid-template-columns:1fr 140px 60px 32px;align-items:center;padding:9px 16px;border-bottom:1px solid var(--border);gap:8px">
+            <span style="font-size:13px;font-weight:500;color:var(--text-primary)">${h.name}</span>
+            <span style="font-size:12px;color:var(--text-secondary)">${h.date}</span>
+            <span style="font-size:12px;color:var(--text-secondary);text-align:right">${h.hours}h</span>
+            <button onclick="deleteHolidayDay('${hc.id}','${h.name}')" style="border:none;background:none;cursor:pointer;color:var(--text-muted);font-size:16px;line-height:1">x</button>
+          </div>`).join('');
+        return `
+        <div class="card" style="padding:0;overflow:hidden">
+          <div class="card-header" style="padding:14px 16px">
+            <div>
+              <div style="display:flex;align-items:center;gap:10px">
+                <span class="card-title">${hc.name}</span>
+                <span style="font-size:11px;font-weight:600;background:var(--green-bg);color:var(--green);border-radius:4px;padding:2px 8px">${hc.holidays.length} holidays</span>
+              </div>
+              <div class="card-subtitle">${hc.description}</div>
+              <div style="font-size:11px;color:var(--text-muted);margin-top:4px">Earning Type: <strong>${hc.earningType}</strong> &middot; ${hc.effectiveFrom} to ${hc.effectiveTo}</div>
+            </div>
+            <div class="card-actions">
+              <button class="btn btn-outline btn-sm" onclick="openHolidayModal('${hc.id}')">Edit</button>
+              <button class="btn btn-danger btn-sm" onclick="deleteHolidayCalendar('${hc.id}')">Delete</button>
+            </div>
+          </div>
+          <div style="border-top:1px solid var(--border)">
+            <div style="display:grid;grid-template-columns:1fr 140px 60px 32px;padding:8px 16px;background:var(--bg-secondary);border-bottom:1px solid var(--border)">
+              <span style="font-size:10px;font-weight:700;color:var(--text-muted);letter-spacing:.5px">HOLIDAY</span>
+              <span style="font-size:10px;font-weight:700;color:var(--text-muted);letter-spacing:.5px">DATE</span>
+              <span style="font-size:10px;font-weight:700;color:var(--text-muted);letter-spacing:.5px;text-align:right">HOURS</span>
+              <span></span>
+            </div>
+            ${rows || '<div style="padding:12px 16px;font-size:12px;color:var(--text-muted)">No holidays added.</div>'}
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    function _syncHolidaysBadge() {
+      const b = document.getElementById('holidaysBadge');
+      if (b) b.textContent = holidayCalendars.length;
+    }
+
+    let _editingHcId = null;
+    function openHolidayModal(hcId) {
+      _editingHcId = hcId || null;
+      const hc = hcId ? holidayCalendars.find(h => h.id === hcId) : null;
+      document.getElementById('hcModalTitle').textContent = hc ? 'Edit Holiday Calendar' : 'New Holiday Calendar';
+      document.getElementById('hcSaveBtn').textContent    = hc ? 'Save Changes' : 'Create Calendar';
+      document.getElementById('hcName').value        = hc ? hc.name : '';
+      document.getElementById('hcDesc').value        = hc ? (hc.description||'') : '';
+      document.getElementById('hcEarningType').value = hc ? hc.earningType : 'Vacation Pay';
+      document.getElementById('hcOrg').value         = hc ? hc.organization : '';
+      document.getElementById('hcFrom').value        = hc ? hc.effectiveFrom : '';
+      document.getElementById('hcTo').value          = hc ? hc.effectiveTo : '';
+      const body = document.getElementById('hcHolidaysBody');
+      body.innerHTML = '';
+      (hc ? hc.holidays : []).forEach(h => _addHcRow(h.name, h.date, h.hours));
+      openModal('holidayModal');
+    }
+
+    function _addHcRow(name, date, hours) {
+      const row = document.createElement('div');
+      row.style.cssText = 'display:grid;grid-template-columns:1fr 140px 70px 32px;gap:6px;padding:6px 12px;border-bottom:1px solid var(--border);align-items:center';
+      row.innerHTML = '<input class="form-input hc-hname" type="text" value="' + (name||'') + '" placeholder="Holiday name" style="height:30px;font-size:12px;padding:0 8px">'
+        + '<input class="form-input hc-hdate" type="date" value="' + (date||'') + '" style="height:30px;font-size:12px;padding:0 8px">'
+        + '<input class="form-input hc-hhours" type="number" value="' + (hours||8) + '" min="1" max="24" style="height:30px;font-size:12px;padding:0 8px">'
+        + '<button onclick="this.closest('div').remove()" style="border:none;background:none;cursor:pointer;color:var(--text-muted);font-size:18px;line-height:1">x</button>';
+      document.getElementById('hcHolidaysBody').appendChild(row);
+    }
+
+    function saveHolidayCalendar() {
+      const name = (document.getElementById('hcName').value||'').trim();
+      if (!name) { showToast('Please enter a calendar name', 'error'); return; }
+      const holidays = [];
+      document.querySelectorAll('#hcHolidaysBody > div').forEach(r => {
+        const n = r.querySelector('.hc-hname')?.value.trim();
+        const d = r.querySelector('.hc-hdate')?.value;
+        const h = parseInt(r.querySelector('.hc-hhours')?.value) || 8;
+        if (n && d) holidays.push({name:n, date:d, hours:h});
+      });
+      const obj = { name, description: document.getElementById('hcDesc').value.trim(),
+        earningType: document.getElementById('hcEarningType').value,
+        organization: document.getElementById('hcOrg').value.trim(),
+        effectiveFrom: document.getElementById('hcFrom').value,
+        effectiveTo: document.getElementById('hcTo').value, holidays };
+      if (_editingHcId) {
+        const idx = holidayCalendars.findIndex(h => h.id === _editingHcId);
+        if (idx >= 0) holidayCalendars[idx] = {...holidayCalendars[idx], ...obj};
+        showToast('Holiday calendar updated', 'success');
+      } else {
+        holidayCalendars.push({id:'hc-'+Date.now(), ...obj});
+        showToast('Holiday calendar created', 'success');
+      }
+      closeModal('holidayModal');
+      renderHolidayCalendars();
+    }
+
+    function deleteHolidayCalendar(hcId) {
+      const hc = holidayCalendars.find(h => h.id === hcId);
+      holidayCalendars = holidayCalendars.filter(h => h.id !== hcId);
+      renderHolidayCalendars();
+      showToast('"' + hc?.name + '" deleted', 'info');
+    }
+
+    function deleteHolidayDay(hcId, name) {
+      const hc = holidayCalendars.find(h => h.id === hcId);
+      if (hc) { hc.holidays = hc.holidays.filter(h => h.name !== name); renderHolidayCalendars(); }
+    }
+
+    // ── Timekeeper ─────────────────────────────────────────────────────────────
+    let timekeeperGroups = [
+      { id:'tg1', name:'Clinical Staff Group A', timekeeper:'Hala Al-Zahrani',
+        period:'Weekly - Starts Sunday',
+        members:[
+          {id:'EMP-1087', name:'Khalid Al-Harbi',  type:'Employee', audit:false},
+          {id:'EMP-1099', name:'Sara Al-Mutairi',   type:'Employee', audit:false},
+          {id:'EMP-1201', name:'Reem Al-Dossary',   type:'Employee', audit:false},
+        ]
+      },
+      { id:'tg2', name:'Admin Staff Group B', timekeeper:'Hala Al-Zahrani',
+        period:'Weekly - Starts Sunday',
+        members:[
+          {id:'EMP-1145', name:'Hessa Al-Shamsi',   type:'Employee', audit:true},
+          {id:'EMP-1033', name:'Faisal Al-Shammari',type:'Employee', audit:false},
+        ]
+      },
+    ];
+
+    function switchTkTab(tab) {
+      ['groups','entry'].forEach(t => {
+        const btn = document.getElementById('tk-tab-' + t);
+        if (btn) btn.classList.toggle('active', t === tab);
+      });
+      document.getElementById('tkGroupsPanel').style.display = tab === 'groups' ? '' : 'none';
+      document.getElementById('tkEntryPanel').style.display  = tab === 'entry'  ? '' : 'none';
+      if (tab === 'groups') renderTkGroups();
+      if (tab === 'entry')  { populateTkEntryGroupSel(); loadTkEntryGrid(); }
+    }
+
+    function renderTkGroups() {
+      const grid = document.getElementById('tkGroupsGrid');
+      if (!grid) return;
+      if (!timekeeperGroups.length) {
+        grid.innerHTML = '<div class="card" style="padding:40px;text-align:center"><div style="font-size:14px;font-weight:600;color:var(--text-primary)">No timekeeper groups</div></div>';
+        return;
+      }
+      grid.innerHTML = timekeeperGroups.map(tg => {
+        const rows = tg.members.map(m => `
+          <div style="display:grid;grid-template-columns:1fr 80px 90px 32px;align-items:center;padding:9px 16px;border-bottom:1px solid var(--border);gap:8px">
+            <div>
+              <div style="font-size:13px;font-weight:500;color:var(--text-primary)">${m.name}</div>
+              <div style="font-size:11px;color:var(--text-muted)">${m.id}</div>
+            </div>
+            <span style="font-size:12px;color:var(--text-secondary)">${m.type}</span>
+            <span style="font-size:11px;font-weight:600;color:${m.audit ? 'var(--brand)' : 'var(--text-muted)'}">${m.audit ? 'Audit On' : 'Audit Off'}</span>
+            <button onclick="removeTkMember('${tg.id}','${m.id}')" style="border:none;background:none;cursor:pointer;color:var(--text-muted);font-size:16px">x</button>
+          </div>`).join('');
+        return `
+        <div class="card" style="padding:0;overflow:hidden">
+          <div class="card-header" style="padding:14px 16px">
+            <div>
+              <div class="card-title">${tg.name}</div>
+              <div class="card-subtitle">Timekeeper: ${tg.timekeeper} &middot; ${tg.period}</div>
+            </div>
+            <div class="card-actions">
+              <span style="font-size:12px;color:var(--text-muted)">${tg.members.length} members</span>
+              <button class="btn btn-danger btn-sm" onclick="deleteTkGroup('${tg.id}')">Delete</button>
+            </div>
+          </div>
+          <div style="border-top:1px solid var(--border)">
+            <div style="display:grid;grid-template-columns:1fr 80px 90px 32px;padding:8px 16px;background:var(--bg-secondary);border-bottom:1px solid var(--border)">
+              <span style="font-size:10px;font-weight:700;color:var(--text-muted);letter-spacing:.5px">EMPLOYEE</span>
+              <span style="font-size:10px;font-weight:700;color:var(--text-muted);letter-spacing:.5px">TYPE</span>
+              <span style="font-size:10px;font-weight:700;color:var(--text-muted);letter-spacing:.5px">AUDIT</span>
+              <span></span>
+            </div>
+            ${rows || '<div style="padding:12px 16px;font-size:12px;color:var(--text-muted)">No members.</div>'}
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    let _editingTgId = null;
+    function openTkGroupModal() {
+      _editingTgId = null;
+      document.getElementById('tgName').value = '';
+      document.getElementById('tgTimekeeper').value = '';
+      document.getElementById('tgPeriod').value = 'Weekly - Starts Sunday';
+      openModal('tkGroupModal');
+    }
+
+    function saveTkGroup() {
+      const name = (document.getElementById('tgName').value||'').trim();
+      if (!name) { showToast('Please enter a group name', 'error'); return; }
+      timekeeperGroups.push({
+        id: 'tg-'+Date.now(), name,
+        timekeeper: document.getElementById('tgTimekeeper').value.trim() || 'Unassigned',
+        period: document.getElementById('tgPeriod').value,
+        members: []
+      });
+      closeModal('tkGroupModal');
+      renderTkGroups();
+      showToast('Timekeeper group created', 'success');
+    }
+
+    function deleteTkGroup(tgId) {
+      timekeeperGroups = timekeeperGroups.filter(t => t.id !== tgId);
+      renderTkGroups();
+      showToast('Group deleted', 'info');
+    }
+
+    function removeTkMember(tgId, empId) {
+      const tg = timekeeperGroups.find(t => t.id === tgId);
+      if (tg) { tg.members = tg.members.filter(m => m.id !== empId); renderTkGroups(); }
+    }
+
+    function populateTkEntryGroupSel() {
+      const sel = document.getElementById('tkEntryGroupSel');
+      if (!sel) return;
+      const cur = sel.value;
+      sel.innerHTML = '<option value="">— Select Group —</option>' +
+        timekeeperGroups.map(tg => '<option value="' + tg.id + '"' + (tg.id === cur ? ' selected' : '') + '>' + tg.name + '</option>').join('');
+      if (cur) sel.value = cur;
+    }
+
+    function loadTkEntryGrid() {
+      const grid = document.getElementById('tkEntryGrid');
+      const tgId = document.getElementById('tkEntryGroupSel')?.value;
+      const tg = timekeeperGroups.find(t => t.id === tgId);
+      if (!grid) return;
+      if (!tg) { grid.innerHTML = '<div class="card" style="padding:32px;text-align:center;font-size:13px;color:var(--text-muted)">Select a Timekeeper Group to begin entry.</div>'; return; }
+      const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+      const headers = days.map(d => '<span style="font-size:10px;font-weight:700;color:var(--text-muted);letter-spacing:.5px;text-align:center">' + d + '</span>').join('');
+      const rows = tg.members.map(m => {
+        const cells = days.map(d =>
+          '<div style="display:flex;flex-direction:column;gap:2px">'
+          + '<input type="time" style="width:72px;font-size:11px;border:1px solid var(--border);border-radius:3px;padding:2px 4px;text-align:center" placeholder="In" title="Check-in">'
+          + '<input type="time" style="width:72px;font-size:11px;border:1px solid var(--border);border-radius:3px;padding:2px 4px;text-align:center" placeholder="Out" title="Check-out">'
+          + '</div>'
+        ).join('');
+        return '<div style="display:grid;grid-template-columns:180px repeat(7,80px) 80px;align-items:center;gap:6px;padding:10px 16px;border-bottom:1px solid var(--border)">'
+          + '<div><div style="font-size:12px;font-weight:600">' + m.name + '</div><div style="font-size:10px;color:var(--text-muted)">' + m.id + '</div></div>'
+          + cells
+          + '<span style="font-size:12px;font-weight:600;color:var(--text-muted);text-align:center">0h</span>'
+          + '</div>';
+      }).join('');
+      grid.innerHTML = '<div class="card" style="padding:0;overflow:auto">'
+        + '<div style="display:grid;grid-template-columns:180px repeat(7,80px) 80px;gap:6px;padding:8px 16px;background:var(--bg-secondary);border-bottom:1px solid var(--border);min-width:800px">'
+        + '<span style="font-size:10px;font-weight:700;color:var(--text-muted);letter-spacing:.5px">EMPLOYEE</span>'
+        + headers
+        + '<span style="font-size:10px;font-weight:700;color:var(--text-muted);letter-spacing:.5px;text-align:center">TOTAL</span>'
+        + '</div>'
+        + '<div style="min-width:800px">' + rows + '</div>'
+        + '<div style="padding:12px 16px;display:flex;justify-content:flex-end;gap:8px;border-top:1px solid var(--border)">'
+        + '<button class="btn btn-outline btn-sm" onclick="showToast('Timecard submitted for all','success')">Submit Selected</button>'
+        + '</div>'
+        + '</div>';
+    }
+
     // ── Navigation ────────────────────────────────────────────
     const pageMeta = {
       dashboard: { title: 'Dashboard', subtitle: 'Tuesday, 1 April 2026 · Health Holding Company' },
@@ -4320,6 +4966,11 @@
       shifts: { title: 'Shift Management', subtitle: 'Define and assign work shifts' },
       locations: { title: 'Clusters & Locations', subtitle: 'Geo-fenced work locations' },
       reports: { title: 'Reports', subtitle: 'Generate and export attendance reports' },
+      worksystems: { title: 'Work Plans', subtitle: 'Shifts, rotations, holiday calendars & assignments' },
+      disciplinary: { title: 'Disciplinary', subtitle: 'Manage disciplinary actions' },
+      timekeeper: { title: 'Timekeeper', subtitle: 'Manage timekeeper groups and entry' },
+      manager: { title: 'Manager View', subtitle: 'Team attendance and timecard approvals' },
+      employee: { title: 'Employee View', subtitle: 'My attendance, timecard and self-service' },
     };
 
     function navigate(view, el) {
@@ -4327,9 +4978,9 @@
       if (el) el.classList.add('active');
       document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
       document.getElementById('view-' + view).classList.add('active');
-      const meta = pageMeta[view];
-      document.getElementById('pageTitle').textContent = meta.title;
-      document.getElementById('pageSubtitle').textContent = meta.subtitle;
+      const meta = pageMeta[view] || {};
+      if (meta.title) document.getElementById('pageTitle').textContent = meta.title;
+      if (meta.subtitle) document.getElementById('pageSubtitle').textContent = meta.subtitle;
     }
 
     // ── Modals ────────────────────────────────────────────────
@@ -4354,7 +5005,7 @@
       setTimeout(() => { toast.style.opacity = '0'; toast.style.transform = 'translateX(20px)'; toast.style.transition = '.2s'; setTimeout(() => toast.remove(), 220); }, 3200);
     }
 
-    // ── Shifts (owned by Work System) ─────────────────────────────────────────────
+    // ── Shifts (owned by Work Plan) ─────────────────────────────────────────────
     let _editingShift = null; // { wsId, shiftId } when editing, null when creating
 
     function toggleFlexibleHours(on) {
@@ -4364,7 +5015,7 @@
     function openShiftModal(preWsId) {
       _editingShift = null;
       const wsSel = document.getElementById('newShiftWsSelect');
-      wsSel.innerHTML = '<option value="">— Select Work System —</option>' +
+      wsSel.innerHTML = '<option value="">— Select Work Plan —</option>' +
         workSystems.filter(ws => ws.status !== 'draft').map(ws =>
           `<option value="${ws.id}" ${ws.id === preWsId ? 'selected' : ''}>${ws.name}</option>`
         ).join('');
@@ -4376,7 +5027,11 @@
       document.getElementById('newShiftName').value = '';
       document.getElementById('newShiftFrom').value = '07:00';
       document.getElementById('newShiftTo').value = '15:00';
-      document.getElementById('newShiftLate').value = '15';
+      document.getElementById('newShiftLate').value         = '15';
+      document.getElementById('newShiftEarlyStart').value      = '15';
+      document.getElementById('newShiftLateStop').value        = '30';
+      document.getElementById('newShiftDayPremium').value      = '0';
+      document.getElementById('newShiftDiffOverride').value    = '0';
       document.getElementById('newShiftFlexible').checked = false;
       document.getElementById('shiftModalSaveBtn').textContent = 'Create Shift';
       toggleFlexibleHours(false);
@@ -4399,7 +5054,11 @@
       toggleFlexibleHours(!!s.flexible);
       document.getElementById('newShiftFrom').value = s.from || '07:00';
       document.getElementById('newShiftTo').value = s.to || '15:00';
-      document.getElementById('newShiftLate').value = s.lateMin || 15;
+      document.getElementById('newShiftLate').value         = s.lateMin    || 15;
+      document.getElementById('newShiftEarlyStart').value      = s.earlyStart || 0;
+      document.getElementById('newShiftLateStop').value        = s.lateStop   || 0;
+      document.getElementById('newShiftDayPremium').value      = s.dayPremium || 0;
+      document.getElementById('newShiftDiffOverride').value    = s.shiftDiff  || 0;
       document.getElementById('shiftModalSaveBtn').textContent = 'Save Changes';
       openModal('shiftModal');
     }
@@ -4420,9 +5079,13 @@
       const to = document.getElementById('newShiftTo').value || '15:00';
       const lateMin = parseInt(document.getElementById('newShiftLate').value) || 15;
       const flexible = document.getElementById('newShiftFlexible').checked;
-      if (!wsId) { showToast('Please select a Work System', 'error'); return; }
+      if (!wsId) { showToast('Please select a Work Plan', 'error'); return; }
       if (!name) { showToast('Please enter a shift name', 'error'); return; }
-      ws.shifts.push({ id: wsId + '-s' + Date.now(), name, from: flexible ? '' : from, to: flexible ? '' : to, lateMin: flexible ? 0 : lateMin, flexible });
+      const earlyStart = parseInt(document.getElementById('newShiftEarlyStart').value) || 0;
+      const lateStop   = parseInt(document.getElementById('newShiftLateStop').value)    || 0;
+      const dayPremium = parseInt(document.getElementById('newShiftDayPremium').value)  || 0;
+      const shiftDiff  = parseInt(document.getElementById('newShiftDiffOverride').value) || 0;
+      ws.shifts.push({ id: wsId + '-s' + Date.now(), name, from: flexible ? '' : from, to: flexible ? '' : to, lateMin: flexible ? 0 : lateMin, flexible, earlyStart, lateStop, dayPremium, shiftDiff });
       closeModal('shiftModal');
       renderWorkSystems();
       renderAllShifts();
@@ -4440,7 +5103,11 @@
       const lateMin = parseInt(document.getElementById('newShiftLate').value) || 15;
       const flexible = document.getElementById('newShiftFlexible').checked;
       if (!name) { showToast('Please enter a shift name', 'error'); return; }
-      ws.shifts[idx] = { ...ws.shifts[idx], name, from: flexible ? '' : from, to: flexible ? '' : to, lateMin: flexible ? 0 : lateMin, flexible };
+      const earlyStart = parseInt(document.getElementById('newShiftEarlyStart').value) || 0;
+      const lateStop   = parseInt(document.getElementById('newShiftLateStop').value)    || 0;
+      const dayPremium = parseInt(document.getElementById('newShiftDayPremium').value)  || 0;
+      const shiftDiff  = parseInt(document.getElementById('newShiftDiffOverride').value) || 0;
+      ws.shifts[idx] = { ...ws.shifts[idx], name, from: flexible ? '' : from, to: flexible ? '' : to, lateMin: flexible ? 0 : lateMin, flexible, earlyStart, lateStop, dayPremium, shiftDiff };
       closeModal('shiftModal');
       renderWorkSystems();
       renderAllShifts();
@@ -4575,28 +5242,31 @@
       openAssignModal();
       showToast('Edit mode — changes not wired in demo', 'info');
     }
-    // ── Work System sub-tab switch ─────────────────────────────────
+    // ── Work Plan sub-tab switch ─────────────────────────────────
     function switchWsTab(tab) {
-      ['systems', 'shifts', 'rotation', 'assignments'].forEach(t => {
+      ['systems', 'shifts', 'rotation', 'holidays', 'assignments'].forEach(t => {
         const btn = document.getElementById('ws-tab-' + t);
         if (btn) btn.classList.toggle('active', t === tab);
       });
       document.getElementById('wsSystemsPanel').style.display    = tab === 'systems'     ? '' : 'none';
       document.getElementById('wsShiftsPanel').style.display     = tab === 'shifts'      ? '' : 'none';
       document.getElementById('wsRotationPanel').style.display   = tab === 'rotation'    ? '' : 'none';
+      document.getElementById('wsHolidaysPanel').style.display   = tab === 'holidays'    ? '' : 'none';
       document.getElementById('wsAssignmentsPanel').style.display = tab === 'assignments' ? '' : 'none';
-      // Header action buttons
-      const btnAssign    = document.getElementById('btnAssignEmp');
-      const btnNewShift  = document.getElementById('btnNewShift');
-      const btnNewRot    = document.getElementById('btnNewRotation');
-      const btnNewWs     = document.getElementById('btnNewWs');
+      const btnAssign   = document.getElementById('btnAssignEmp');
+      const btnNewShift = document.getElementById('btnNewShift');
+      const btnNewRot   = document.getElementById('btnNewRotation');
+      const btnNewHol   = document.getElementById('btnNewHoliday');
+      const btnNewWs    = document.getElementById('btnNewWs');
       if (btnAssign)   btnAssign.style.display   = tab === 'assignments' ? '' : 'none';
       if (btnNewShift) btnNewShift.style.display  = tab === 'shifts'     ? '' : 'none';
       if (btnNewRot)   btnNewRot.style.display    = tab === 'rotation'   ? '' : 'none';
+      if (btnNewHol)   btnNewHol.style.display    = tab === 'holidays'   ? '' : 'none';
       if (btnNewWs)    btnNewWs.style.display     = tab === 'systems'    ? '' : 'none';
       if (tab === 'assignments') { populateAssignmentFilters(); renderAssignmentsTable(); }
       if (tab === 'shifts')      renderAllShifts();
       if (tab === 'rotation')    { renderRotationPlans(); _syncRotationBadge(); }
+      if (tab === 'holidays')    { renderHolidayCalendars(); _syncHolidaysBadge(); }
     }
 
     function _syncRotationBadge() {
@@ -4604,7 +5274,7 @@
       if (b) b.textContent = rotationPlans.length;
     }
 
-    // ── Render all shifts (grouped by Work System) ───────────────────
+    // ── Render all shifts (grouped by Work Plan) ───────────────────
     function renderAllShifts() {
       const grid = document.getElementById('shiftsLibraryGrid');
       if (!grid) return;
@@ -4614,7 +5284,7 @@
       const selectedWsId = filterSel ? filterSel.value : '';
       if (filterSel) {
         const cur = filterSel.value;
-        filterSel.innerHTML = '<option value="">All Work Systems</option>' +
+        filterSel.innerHTML = '<option value="">All Work Plans</option>' +
           workSystems.map(ws => `<option value="${ws.id}" ${ws.id === cur ? 'selected' : ''}>${ws.name}</option>`).join('');
         filterSel.value = cur;
       }
@@ -4631,7 +5301,7 @@
       });
 
       if (!allShifts.length) {
-        grid.innerHTML = `<div class="card" style="padding:40px;text-align:center"><div style="font-size:32px;margin-bottom:8px">⏰</div><div style="font-size:14px;font-weight:600;color:var(--text-primary)">${total ? 'No shifts in selected Work System' : 'No shifts defined yet'}</div><div style="font-size:12px;color:var(--text-muted);margin-top:4px">${total ? 'Try clearing the filter.' : 'Add shifts to a Work System from the Work Systems tab.'}</div></div>`;
+        grid.innerHTML = `<div class="card" style="padding:40px;text-align:center"><div style="font-size:32px;margin-bottom:8px">⏰</div><div style="font-size:14px;font-weight:600;color:var(--text-primary)">${total ? 'No shifts in selected Work Plan' : 'No shifts defined yet'}</div><div style="font-size:12px;color:var(--text-muted);margin-top:4px">${total ? 'Try clearing the filter.' : 'Add shifts to a Work Plan from the Work Plans tab.'}</div></div>`;
         return;
       }
 
@@ -4649,7 +5319,7 @@
               <span style="font-size:11px;font-weight:600;background:var(--brand-light);color:var(--brand);border-radius:4px;padding:2px 7px">${ws.name}</span>
               ${s.flexible ? '<span style="font-size:11px;font-weight:600;background:var(--purple-bg);color:var(--purple);border-radius:4px;padding:2px 7px">Flexible</span>' : ''}
             </div>
-            <div style="font-size:11px;color:var(--text-muted);margin-top:3px">${s.flexible ? 'Employee sets own hours' : s.from + ' – ' + s.to + ' &nbsp;&middot;&nbsp; Late threshold: +' + s.lateMin + ' min'}</div>
+            <div style="font-size:11px;color:var(--text-muted);margin-top:3px">${s.flexible ? 'Employee sets own hours' : `${s.from} – ${s.to}  &middot;  Late: +${s.lateMin}min${s.earlyStart ? '  &middot;  Early: −'+s.earlyStart+'min' : ''}${s.lateStop ? '  &middot;  Late stop: +'+s.lateStop+'min' : ''}${s.dayPremium ? '  &middot;  Premium: '+s.dayPremium+'%' : ''}${s.shiftDiff ? '  &middot;  Diff: '+s.shiftDiff+'%' : ''}\`}</div>
           </div>
         </div>
         <div style="display:flex;align-items:center;gap:8px">
@@ -4669,7 +5339,7 @@
       if (!wsFilter || !shiftFilter) return;
       const curWs = wsFilter.value;
       const curShift = shiftFilter.value;
-      wsFilter.innerHTML = '<option value="">All Work Systems</option>' +
+      wsFilter.innerHTML = '<option value="">All Work Plans</option>' +
         workSystems.map(ws => `<option value="${ws.name}" ${ws.name === curWs ? 'selected' : ''} >${ws.name}</option>`).join('');
       const allShiftNames = [...new Set(workSystems.flatMap(ws => ws.shifts.map(s => s.name)))];
       shiftFilter.innerHTML = '<option value="">All Shifts</option>' +
@@ -4681,7 +5351,7 @@
     function openAssignModal(preShift = '', preWsId = '') {
       // Populate WS dropdown
       const wsSel = document.getElementById('assignWsSelect');
-      wsSel.innerHTML = '<option value="">— Select Work System —</option>' +
+      wsSel.innerHTML = '<option value="">— Select Work Plan —</option>' +
         workSystems.filter(ws => ws.status !== 'draft').map(ws =>
           `<option value="${ws.id}" ${ws.id === preWsId ? 'selected' : ''}>${ws.name}</option>`
         ).join('');
@@ -4691,6 +5361,13 @@
 
       // Reset scope to employee
       switchAssignScope('employee', document.getElementById('scopeEmployee'));
+
+      // Populate ATI Rotation Plan dropdown
+      const atiRp = document.getElementById('atiRotationPlan');
+      if (atiRp) {
+        atiRp.innerHTML = '<option value="">— None —</option>' +
+          rotationPlans.map(rp => `<option value="${rp.id}">${rp.name}</option>`).join('');
+      }
 
       // Reset selected employees
       _selectedEmpIds = new Set();
@@ -4792,7 +5469,7 @@
       const ws = workSystems.find(w => w.id === wsId);
       const dateFrom = document.getElementById('assignDateFrom').value;
 
-      if (!wsId || !shift) { showToast('Please select a Work System and Shift', 'error'); return; }
+      if (!wsId || !shift) { showToast('Please select a Work Plan and Shift', 'error'); return; }
 
       if (_currentScope === 'employee' && _selectedEmpIds.size === 0) {
         showToast('Please select at least one employee', 'error'); return;
@@ -4847,7 +5524,7 @@
       manager: { view: 'manager', title: 'My Team', subtitle: 'Cardiology Dept. · King Abdulaziz Hospital' },
       employee: { view: 'employee', title: 'My Attendance', subtitle: 'Khalid Al-Harbi · EMP-1087' },
     };
-    const hrOnlyNav = ['worksystems', 'disciplinary', 'locations'];
+    const hrOnlyNav = ['worksystems', 'disciplinary', 'locations', 'timekeeper'];
 
     function switchRole(role, btn) {
       document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('active'));
@@ -4897,7 +5574,7 @@
     }
 
     // ── pageMeta (extend) ─────────────────────────────────────
-    pageMeta.worksystems = { title: 'Work Systems', subtitle: 'Attendance rules, overtime policies, and working patterns' };
+    pageMeta.worksystems = { title: 'Work Plans', subtitle: 'Attendance rules, overtime policies, and working patterns' };
     pageMeta.disciplinary = { title: 'Disciplinary Records', subtitle: 'Penalty log and disciplinary recommendations' };
     pageMeta.manager = { title: 'My Team', subtitle: 'Cardiology Dept. · King Abdulaziz Hospital' };
     pageMeta.employee = { title: 'My Attendance', subtitle: 'Khalid Al-Harbi · EMP-1087' };
@@ -4908,67 +5585,235 @@
     renderViolations();
     renderRotationPlans();
     _syncRotationBadge();
+    renderHolidayCalendars();
+    _syncHolidaysBadge();
+    renderTkGroups();
     populateAssignmentFilters();
     switchWsTab('systems');
+    // Show timekeeper nav for HR role by default
+    const navTk = document.getElementById('navTimekeeper');
+    if (navTk) navTk.style.display = '';
     setTimeout(() => {
       const b = document.getElementById('assignmentsBadge');
       if (b) b.textContent = shiftAssignments.length;
     }, 0);
+
+    /* ── Phase 7: Employee Self-Service Timecard ── */
+    function switchEmpTab(tab) {
+      ['attendance', 'timecard'].forEach(t => {
+        const btn = document.getElementById('emp-tab-' + t);
+        if (btn) btn.classList.toggle('active', t === tab);
+      });
+      const ap = document.getElementById('empAttendancePanel');
+      const tp = document.getElementById('empTimecardPanel');
+      if (ap) ap.style.display = tab === 'attendance' ? '' : 'none';
+      if (tp) tp.style.display = tab === 'timecard' ? '' : 'none';
+    }
+
+    function submitTimecard() {
+      const btn = event.target;
+      btn.disabled = true;
+      btn.textContent = 'Submitting…';
+      setTimeout(() => {
+        const status = document.getElementById('tcStatus');
+        if (status) { status.textContent = 'Submitted'; status.className = 'chip chip-brand'; }
+        btn.textContent = 'Submitted';
+        showToast('Timecard submitted for manager approval', 'success');
+      }, 600);
+    }
+
+    function prevTimecardWeek() {
+      showToast('Navigated to previous week', 'success');
+    }
+    function nextTimecardWeek() {
+      showToast('Navigated to next week', 'success');
+    }
+
+    /* ── Phase 8: Manager Timecard Approval ── */
+    function approveTimecard(empId, weekStart) {
+      showToast('Timecard approved for ' + empId, 'success');
+      renderTimecardApprovals();
+    }
+    function rejectTimecard(empId, weekStart) {
+      showToast('Timecard rejected for ' + empId, 'error');
+      renderTimecardApprovals();
+    }
+    function viewTimecardDetail(empId, weekStart) {
+      showToast('Viewing timecard for ' + empId + ' week of ' + weekStart, 'success');
+    }
+    function approveAllTimecards() {
+      showToast('All pending timecards approved', 'success');
+    }
+    function renderTimecardApprovals() {
+      // In a real implementation this would filter/re-render based on selected filters
+      // For the prototype, toast is sufficient
+    }
+
   </script>
-<!-- ── Rotation Plan Modal ─────────────────────────────────────── -->
-<div class="modal-overlay" id="rotationModal">
-  <div class="modal" style="width:600px;max-height:90vh;overflow-y:auto">
+  <!-- ── Rotation Plan Modal ─────────────────────────────────────── -->
+  <div class="modal-overlay" id="rotationModal">
+    <div class="modal" style="width:600px;max-height:90vh;overflow-y:auto">
+      <div class="modal-header">
+        <div class="modal-title" id="rotationModalTitle">New Rotation Plan</div>
+        <button class="modal-close" onclick="closeModal('rotationModal')">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+            <path d="M1 1L11 11M11 1L1 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="form-row">
+          <div class="form-group" style="flex:2">
+            <label class="form-label">Plan Name <span style="color:var(--red)">*</span></label>
+            <input class="form-input" id="rpName" type="text" placeholder="e.g. Clinical Staff Rotation Q2">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Description</label>
+          <input class="form-input" id="rpDesc" type="text" placeholder="Optional notes about this plan">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Effective Start Date <span style="color:var(--red)">*</span></label>
+            <input class="form-input" id="rpStartDate" type="date">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Effective End Date</label>
+            <input class="form-input" id="rpEndDate" type="date">
+          </div>
+        </div>
+
+        <!-- Rotation Setup -->
+        <div style="margin-top:8px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px">
+            <div style="font-size:13px;font-weight:700;color:var(--text-primary)">Rotation Plan Setup</div>
+            <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+              <input class="form-input" id="rpNumRotations" type="number" value="4" min="1" max="52" style="width:72px;height:30px;font-size:12px;padding:0 8px" placeholder="#">
+              <input class="form-input" id="rpNextStartDate" type="date" style="height:30px;font-size:12px;padding:0 8px">
+              <button class="btn btn-outline btn-sm" onclick="autogenerateRotationWeeks()">Autogenerate</button>
+              <button class="btn btn-outline btn-sm" onclick="clearRotationWeeks()">Delete All</button>
+              <button class="btn btn-outline btn-sm" onclick="addRotationWeekRow()">+ Add Week</button>
+            </div>
+          </div>
+          <div
+            style="background:var(--bg-secondary);border-radius:var(--radius-sm);border:1px solid var(--border);overflow:hidden">
+            <div
+              style="display:grid;grid-template-columns:60px 160px 1fr 32px;gap:0;padding:8px 12px;border-bottom:1px solid var(--border);background:var(--bg)">
+              <span style="font-size:11px;font-weight:600;color:var(--text-muted)">WEEK</span>
+              <span style="font-size:11px;font-weight:600;color:var(--text-muted)">START DATE</span>
+              <span style="font-size:11px;font-weight:600;color:var(--text-muted)">WORK SYSTEM</span>
+              <span></span>
+            </div>
+            <div id="rotationWeeksBody" style="display:flex;flex-direction:column"></div>
+          </div>
+          <div id="rotationWeeksEmpty"
+            style="display:none;text-align:center;padding:24px;font-size:12px;color:var(--text-muted)">
+            No weeks added yet. Click "+ Add Week" to begin.
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('rotationModal')">Cancel</button>
+        <button class="btn btn-primary" id="rpSaveBtn" onclick="saveRotationPlan()">Create Plan</button>
+      </div>
+    </div>
+  </div>
+<!-- ── Timekeeper Group Modal ─────────────────────────────────── -->
+<div class="modal-overlay" id="tkGroupModal">
+  <div class="modal">
     <div class="modal-header">
-      <div class="modal-title" id="rotationModalTitle">New Rotation Plan</div>
-      <button class="modal-close" onclick="closeModal('rotationModal')">
+      <div class="modal-title">New Timekeeper Group</div>
+      <button class="modal-close" onclick="closeModal('tkGroupModal')">
         <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1 1L11 11M11 1L1 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
       </button>
     </div>
     <div class="modal-body">
-      <div class="form-row">
-        <div class="form-group" style="flex:2">
-          <label class="form-label">Plan Name <span style="color:var(--red)">*</span></label>
-          <input class="form-input" id="rpName" type="text" placeholder="e.g. Clinical Staff Rotation Q2">
-        </div>
+      <div class="form-group">
+        <label class="form-label">Group Name <span style="color:var(--red)">*</span></label>
+        <input class="form-input" id="tgName" type="text" placeholder="e.g. Clinical Staff Group A">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Timekeeper (responsible person)</label>
+        <input class="form-input" id="tgTimekeeper" type="text" placeholder="e.g. Hala Al-Zahrani">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Timecard Period</label>
+        <select class="form-input" id="tgPeriod">
+          <option value="Weekly - Starts Sunday">Weekly - Starts Sunday</option>
+          <option value="Weekly - Starts Monday">Weekly - Starts Monday</option>
+          <option value="Bi-Weekly">Bi-Weekly</option>
+          <option value="Monthly">Monthly</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('tkGroupModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveTkGroup()">Create Group</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Holiday Calendar Modal ───────────────────────────────── -->
+<div class="modal-overlay" id="holidayModal">
+  <div class="modal" style="width:580px;max-height:90vh;overflow-y:auto">
+    <div class="modal-header">
+      <div class="modal-title" id="hcModalTitle">New Holiday Calendar</div>
+      <button class="modal-close" onclick="closeModal('holidayModal')">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1 1L11 11M11 1L1 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Calendar Name <span style="color:var(--red)">*</span></label>
+        <input class="form-input" id="hcName" type="text" placeholder="e.g. Saudi National Holidays 2026">
       </div>
       <div class="form-group">
         <label class="form-label">Description</label>
-        <input class="form-input" id="rpDesc" type="text" placeholder="Optional notes about this plan">
+        <input class="form-input" id="hcDesc" type="text" placeholder="Optional notes">
       </div>
       <div class="form-row">
         <div class="form-group">
-          <label class="form-label">Effective Start Date <span style="color:var(--red)">*</span></label>
-          <input class="form-input" id="rpStartDate" type="date">
+          <label class="form-label">Earning Type</label>
+          <select class="form-input" id="hcEarningType">
+            <option value="Vacation Pay">Vacation Pay</option>
+            <option value="Regular Pay">Regular Pay</option>
+            <option value="Unpaid">Unpaid</option>
+          </select>
         </div>
         <div class="form-group">
-          <label class="form-label">Effective End Date</label>
-          <input class="form-input" id="rpEndDate" type="date">
+          <label class="form-label">Organization</label>
+          <input class="form-input" id="hcOrg" type="text" placeholder="e.g. Health Holding Company">
         </div>
       </div>
-
-      <!-- Rotation Setup -->
-      <div style="margin-top:8px">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-          <div style="font-size:13px;font-weight:700;color:var(--text-primary)">Rotation Plan Setup</div>
-          <button class="btn btn-outline btn-sm" onclick="addRotationWeekRow()">+ Add Week</button>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Effective From <span style="color:var(--red)">*</span></label>
+          <input class="form-input" id="hcFrom" type="date">
         </div>
-        <div style="background:var(--bg-secondary);border-radius:var(--radius-sm);border:1px solid var(--border);overflow:hidden">
-          <div style="display:grid;grid-template-columns:60px 160px 1fr 32px;gap:0;padding:8px 12px;border-bottom:1px solid var(--border);background:var(--bg)">
-            <span style="font-size:11px;font-weight:600;color:var(--text-muted)">WEEK</span>
-            <span style="font-size:11px;font-weight:600;color:var(--text-muted)">START DATE</span>
-            <span style="font-size:11px;font-weight:600;color:var(--text-muted)">WORK SYSTEM</span>
+        <div class="form-group">
+          <label class="form-label">Effective To</label>
+          <input class="form-input" id="hcTo" type="date">
+        </div>
+      </div>
+      <div style="margin-top:8px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <div style="font-size:13px;font-weight:700;color:var(--text-primary)">Holiday Days</div>
+          <button class="btn btn-outline btn-sm" onclick="_addHcRow('','',8)">+ Add Holiday</button>
+        </div>
+        <div style="border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden">
+          <div style="display:grid;grid-template-columns:1fr 140px 70px 32px;padding:8px 12px;background:var(--bg-secondary);border-bottom:1px solid var(--border)">
+            <span style="font-size:11px;font-weight:600;color:var(--text-muted)">HOLIDAY NAME</span>
+            <span style="font-size:11px;font-weight:600;color:var(--text-muted)">DATE</span>
+            <span style="font-size:11px;font-weight:600;color:var(--text-muted)">HOURS</span>
             <span></span>
           </div>
-          <div id="rotationWeeksBody" style="display:flex;flex-direction:column"></div>
-        </div>
-        <div id="rotationWeeksEmpty" style="display:none;text-align:center;padding:24px;font-size:12px;color:var(--text-muted)">
-          No weeks added yet. Click "+ Add Week" to begin.
+          <div id="hcHolidaysBody"></div>
         </div>
       </div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-outline" onclick="closeModal('rotationModal')">Cancel</button>
-      <button class="btn btn-primary" id="rpSaveBtn" onclick="saveRotationPlan()">Create Plan</button>
+      <button class="btn btn-outline" onclick="closeModal('holidayModal')">Cancel</button>
+      <button class="btn btn-primary" id="hcSaveBtn" onclick="saveHolidayCalendar()">Create Calendar</button>
     </div>
   </div>
 </div>
