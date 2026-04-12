@@ -1656,13 +1656,6 @@
           </svg>
           Work Systems
         </div>
-        <div class="nav-item" onclick="navigate('rotation', this)">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <path d="M8 2.5A5.5 5.5 0 1 1 2.5 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-            <path d="M2.5 4.5V8H6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-          Rotation Plans
-        </div>
         <div class="nav-item" onclick="navigate('disciplinary', this)">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
             <path
@@ -2594,13 +2587,20 @@
                 </svg>
                 Assign Employee
               </button>
-              <button class="btn btn-outline" onclick="openShiftModal()">
+              <button class="btn btn-outline" id="btnNewRotation" onclick="openRotationModal()" style="display:none">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                  <path d="M7 1.5A5.5 5.5 0 1 1 1.5 7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                  <path d="M1.5 3.5V7H5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                New Rotation Plan
+              </button>
+              <button class="btn btn-outline" id="btnNewShift" onclick="openShiftModal()" style="display:none">
                 <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                   <path d="M7 2V12M2 7H12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
                 </svg>
                 New Shift
               </button>
-              <button class="btn btn-primary" id="btnNewWs" onclick="openModal('wsModal')">
+              <button class="btn btn-primary" id="btnNewWs" onclick="openModal('wsModal')" style="">
                 <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                   <path d="M7 2V12M2 7H12" stroke="white" stroke-width="1.8" stroke-linecap="round" />
                 </svg>
@@ -2615,6 +2615,11 @@
             <button class="shift-tab" id="ws-tab-shifts" onclick="switchWsTab('shifts')">
               Shifts
               <span id="shiftsBadge"
+                style="background:var(--bg);color:var(--text-muted);font-size:10px;font-weight:700;padding:2px 6px;border-radius:10px;margin-left:6px">0</span>
+            </button>
+            <button class="shift-tab" id="ws-tab-rotation" onclick="switchWsTab('rotation')">
+              Rotation Plans
+              <span id="rotationBadge"
                 style="background:var(--bg);color:var(--text-muted);font-size:10px;font-weight:700;padding:2px 6px;border-radius:10px;margin-left:6px">0</span>
             </button>
             <button class="shift-tab" id="ws-tab-assignments" onclick="switchWsTab('assignments')">
@@ -2641,6 +2646,11 @@
               </div>
             </div>
             <div id="shiftsLibraryGrid" style="display:flex;flex-direction:column;gap:12px;margin-top:12px"></div>
+          </div>
+
+          <!-- Rotation Plans panel -->
+          <div id="wsRotationPanel" style="display:none">
+            <div id="rotationPlansGrid" style="display:flex;flex-direction:column;gap:14px;margin-top:4px"></div>
           </div>
 
           <!-- Assignments panel -->
@@ -2691,15 +2701,6 @@
         </div>
 
         <!-- ══ DISCIPLINARY RECORDS VIEW ══ -->
-        <!-- ══ ROTATION PLANS ══════════════════════════════════════ -->
-        <div class="view" id="view-rotation">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
-            <div></div>
-            <button class="btn btn-primary" onclick="openRotationModal()">+ New Rotation Plan</button>
-          </div>
-          <div id="rotationPlansGrid" style="display:flex;flex-direction:column;gap:14px"></div>
-        </div>
-
         <div class="view" id="view-disciplinary">
           <div style="display:flex;align-items:center;justify-content:space-between">
             <div>
@@ -4300,12 +4301,14 @@
       }
       closeModal('rotationModal');
       renderRotationPlans();
+      _syncRotationBadge();
     }
 
     function deleteRotationPlan(rpId) {
       const rp = rotationPlans.find(r => r.id === rpId);
       rotationPlans = rotationPlans.filter(r => r.id !== rpId);
       renderRotationPlans();
+      _syncRotationBadge();
       showToast(`"${rp?.name}" deleted`, 'info');
     }
 
@@ -4574,17 +4577,31 @@
     }
     // ── Work System sub-tab switch ─────────────────────────────────
     function switchWsTab(tab) {
-      ['systems', 'shifts', 'assignments'].forEach(t => {
+      ['systems', 'shifts', 'rotation', 'assignments'].forEach(t => {
         const btn = document.getElementById('ws-tab-' + t);
         if (btn) btn.classList.toggle('active', t === tab);
       });
-      document.getElementById('wsSystemsPanel').style.display = tab === 'systems' ? '' : 'none';
-      document.getElementById('wsShiftsPanel').style.display = tab === 'shifts' ? '' : 'none';
+      document.getElementById('wsSystemsPanel').style.display    = tab === 'systems'     ? '' : 'none';
+      document.getElementById('wsShiftsPanel').style.display     = tab === 'shifts'      ? '' : 'none';
+      document.getElementById('wsRotationPanel').style.display   = tab === 'rotation'    ? '' : 'none';
       document.getElementById('wsAssignmentsPanel').style.display = tab === 'assignments' ? '' : 'none';
-      const btnAssign = document.getElementById('btnAssignEmp');
-      if (btnAssign) btnAssign.style.display = tab === 'assignments' ? '' : 'none';
+      // Header action buttons
+      const btnAssign    = document.getElementById('btnAssignEmp');
+      const btnNewShift  = document.getElementById('btnNewShift');
+      const btnNewRot    = document.getElementById('btnNewRotation');
+      const btnNewWs     = document.getElementById('btnNewWs');
+      if (btnAssign)   btnAssign.style.display   = tab === 'assignments' ? '' : 'none';
+      if (btnNewShift) btnNewShift.style.display  = tab === 'shifts'     ? '' : 'none';
+      if (btnNewRot)   btnNewRot.style.display    = tab === 'rotation'   ? '' : 'none';
+      if (btnNewWs)    btnNewWs.style.display     = tab === 'systems'    ? '' : 'none';
       if (tab === 'assignments') { populateAssignmentFilters(); renderAssignmentsTable(); }
-      if (tab === 'shifts') renderAllShifts();
+      if (tab === 'shifts')      renderAllShifts();
+      if (tab === 'rotation')    { renderRotationPlans(); _syncRotationBadge(); }
+    }
+
+    function _syncRotationBadge() {
+      const b = document.getElementById('rotationBadge');
+      if (b) b.textContent = rotationPlans.length;
     }
 
     // ── Render all shifts (grouped by Work System) ───────────────────
@@ -4830,7 +4847,7 @@
       manager: { view: 'manager', title: 'My Team', subtitle: 'Cardiology Dept. · King Abdulaziz Hospital' },
       employee: { view: 'employee', title: 'My Attendance', subtitle: 'Khalid Al-Harbi · EMP-1087' },
     };
-    const hrOnlyNav = ['worksystems', 'rotation', 'disciplinary', 'locations'];
+    const hrOnlyNav = ['worksystems', 'disciplinary', 'locations'];
 
     function switchRole(role, btn) {
       document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('active'));
@@ -4881,7 +4898,6 @@
 
     // ── pageMeta (extend) ─────────────────────────────────────
     pageMeta.worksystems = { title: 'Work Systems', subtitle: 'Attendance rules, overtime policies, and working patterns' };
-    pageMeta.rotation = { title: 'Rotation Plans', subtitle: 'Schedule recurring Work Systems for your staff' };
     pageMeta.disciplinary = { title: 'Disciplinary Records', subtitle: 'Penalty log and disciplinary recommendations' };
     pageMeta.manager = { title: 'My Team', subtitle: 'Cardiology Dept. · King Abdulaziz Hospital' };
     pageMeta.employee = { title: 'My Attendance', subtitle: 'Khalid Al-Harbi · EMP-1087' };
@@ -4891,6 +4907,7 @@
     renderWorkSystems();
     renderViolations();
     renderRotationPlans();
+    _syncRotationBadge();
     populateAssignmentFilters();
     switchWsTab('systems');
     setTimeout(() => {
