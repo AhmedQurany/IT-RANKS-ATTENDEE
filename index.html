@@ -4765,7 +4765,7 @@
       row.innerHTML = '<input class="form-input hc-hname" type="text" value="' + (name||'') + '" placeholder="Holiday name" style="height:30px;font-size:12px;padding:0 8px">'
         + '<input class="form-input hc-hdate" type="date" value="' + (date||'') + '" style="height:30px;font-size:12px;padding:0 8px">'
         + '<input class="form-input hc-hhours" type="number" value="' + (hours||8) + '" min="1" max="24" style="height:30px;font-size:12px;padding:0 8px">'
-        + '<button onclick="this.closest('div').remove()" style="border:none;background:none;cursor:pointer;color:var(--text-muted);font-size:18px;line-height:1">x</button>';
+        + '<button onclick="this.closest(\'div\').remove()" style="border:none;background:none;cursor:pointer;color:var(--text-muted);font-size:18px;line-height:1">x</button>';
       document.getElementById('hcHolidaysBody').appendChild(row);
     }
 
@@ -4953,7 +4953,7 @@
         + '</div>'
         + '<div style="min-width:800px">' + rows + '</div>'
         + '<div style="padding:12px 16px;display:flex;justify-content:flex-end;gap:8px;border-top:1px solid var(--border)">'
-        + '<button class="btn btn-outline btn-sm" onclick="showToast('Timecard submitted for all','success')">Submit Selected</button>'
+        + '<button class="btn btn-outline btn-sm" onclick="showToast(\'Timecard submitted for all\',\'success\')">Submit Selected</button>'
         + '</div>'
         + '</div>';
     }
@@ -5319,7 +5319,7 @@
               <span style="font-size:11px;font-weight:600;background:var(--brand-light);color:var(--brand);border-radius:4px;padding:2px 7px">${ws.name}</span>
               ${s.flexible ? '<span style="font-size:11px;font-weight:600;background:var(--purple-bg);color:var(--purple);border-radius:4px;padding:2px 7px">Flexible</span>' : ''}
             </div>
-            <div style="font-size:11px;color:var(--text-muted);margin-top:3px">${s.flexible ? 'Employee sets own hours' : `${s.from} – ${s.to}  &middot;  Late: +${s.lateMin}min${s.earlyStart ? '  &middot;  Early: −'+s.earlyStart+'min' : ''}${s.lateStop ? '  &middot;  Late stop: +'+s.lateStop+'min' : ''}${s.dayPremium ? '  &middot;  Premium: '+s.dayPremium+'%' : ''}${s.shiftDiff ? '  &middot;  Diff: '+s.shiftDiff+'%' : ''}\`}</div>
+            <div style="font-size:11px;color:var(--text-muted);margin-top:3px">${s.flexible ? 'Employee sets own hours' : s.from + ' – ' + s.to + '  &middot;  Late: +' + s.lateMin + 'min' + (s.earlyStart ? '  &middot;  Early: −' + s.earlyStart + 'min' : '') + (s.lateStop ? '  &middot;  Late stop: +' + s.lateStop + 'min' : '') + (s.dayPremium ? '  &middot;  Premium: ' + s.dayPremium + '%' : '') + (s.shiftDiff ? '  &middot;  Diff: ' + s.shiftDiff + '%' : '')}</div>
           </div>
         </div>
         <div style="display:flex;align-items:center;gap:8px">
