@@ -4135,13 +4135,13 @@
           const ws = workSystems.find(x => x.id === w.workSystemId);
           const shiftNames = ws ? ws.shifts.map(s => s.name).join(', ') : '—';
           return `
-          <div style="display:grid;grid-template-columns:60px 1fr 160px 80px;align-items:center;padding:10px 16px;border-bottom:1px solid var(--border);gap:8px">
+          <div style="display:grid;grid-template-columns:60px 160px 1fr 80px;align-items:center;padding:10px 16px;border-bottom:1px solid var(--border);gap:8px">
             <span style="font-size:12px;font-weight:700;color:var(--text-muted)">Week ${w.weekNum}</span>
+            <span style="font-size:12px;color:var(--text-secondary)">${w.startDate || '—'}</span>
             <div>
               <div style="font-size:13px;font-weight:600;color:var(--text-primary)">${ws ? ws.name : '—'}</div>
               <div style="font-size:11px;color:var(--text-muted);margin-top:1px">${shiftNames ? 'Shifts: ' + shiftNames : 'No shifts'}</div>
             </div>
-            <span style="font-size:12px;color:var(--text-secondary)">${w.startDate || '—'}</span>
             <div style="display:flex;gap:6px">
               <button class="btn btn-outline btn-sm" onclick="openEditRotationModal('${rp.id}')">Edit</button>
             </div>
@@ -4170,10 +4170,10 @@
           </div>
           ${totalWeeks > 0 ? `
           <div style="border-top:1px solid var(--border)">
-            <div style="display:grid;grid-template-columns:60px 1fr 160px 80px;padding:8px 16px;background:var(--bg-secondary);border-bottom:1px solid var(--border)">
+            <div style="display:grid;grid-template-columns:60px 160px 1fr 80px;padding:8px 16px;background:var(--bg-secondary);border-bottom:1px solid var(--border)">
               <span style="font-size:10px;font-weight:700;color:var(--text-muted);letter-spacing:.5px">WEEK</span>
-              <span style="font-size:10px;font-weight:700;color:var(--text-muted);letter-spacing:.5px">WORK SYSTEM</span>
               <span style="font-size:10px;font-weight:700;color:var(--text-muted);letter-spacing:.5px">START DATE</span>
+              <span style="font-size:10px;font-weight:700;color:var(--text-muted);letter-spacing:.5px">WORK SYSTEM</span>
               <span></span>
             </div>
             ${weekRows}
@@ -4221,19 +4221,19 @@
       const rowId = 'rp-week-row-' + num;
       const div = document.createElement('div');
       div.id = rowId;
-      div.style.cssText = 'display:grid;grid-template-columns:60px 1fr 160px 32px;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid var(--border)';
+      div.style.cssText = 'display:grid;grid-template-columns:60px 160px 1fr 32px;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid var(--border)';
       const wsOptions = workSystems.filter(ws => ws.status !== 'draft').map(ws =>
         `<option value="${ws.id}" ${ws.id === wsId ? 'selected' : ''}>${ws.name}</option>`
       ).join('');
       div.innerHTML = `
         <span style="font-size:12px;font-weight:700;color:var(--text-muted)">Week ${num}</span>
+        <input class="form-input" id="rpWeekDate-${num}" type="date" value="${startDate}"
+          style="height:32px;font-size:12px;padding:0 8px">
         <select class="form-input" id="rpWeekWs-${num}" style="height:32px;font-size:12px;padding:0 8px"
           onchange="onRpWeekWsChange(${num})">
           <option value="">— Select Work System —</option>
           ${wsOptions}
         </select>
-        <input class="form-input" id="rpWeekDate-${num}" type="date" value="${startDate}"
-          style="height:32px;font-size:12px;padding:0 8px">
         <button onclick="removeRotationWeekRow('${rowId}',${num})" style="width:28px;height:28px;border:none;background:none;cursor:pointer;color:var(--text-muted);font-size:16px;display:flex;align-items:center;justify-content:center;border-radius:4px" title="Remove">×</button>`;
       return div;
     }
@@ -4953,10 +4953,10 @@
           <button class="btn btn-outline btn-sm" onclick="addRotationWeekRow()">+ Add Week</button>
         </div>
         <div style="background:var(--bg-secondary);border-radius:var(--radius-sm);border:1px solid var(--border);overflow:hidden">
-          <div style="display:grid;grid-template-columns:60px 1fr 160px 32px;gap:0;padding:8px 12px;border-bottom:1px solid var(--border);background:var(--bg)">
+          <div style="display:grid;grid-template-columns:60px 160px 1fr 32px;gap:0;padding:8px 12px;border-bottom:1px solid var(--border);background:var(--bg)">
             <span style="font-size:11px;font-weight:600;color:var(--text-muted)">WEEK</span>
-            <span style="font-size:11px;font-weight:600;color:var(--text-muted)">WORK SYSTEM</span>
             <span style="font-size:11px;font-weight:600;color:var(--text-muted)">START DATE</span>
+            <span style="font-size:11px;font-weight:600;color:var(--text-muted)">WORK SYSTEM</span>
             <span></span>
           </div>
           <div id="rotationWeeksBody" style="display:flex;flex-direction:column"></div>
