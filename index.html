@@ -3530,42 +3530,45 @@
         </button>
       </div>
       <div class="modal-body">
+
+        <!-- Shift Name -->
         <div class="form-group">
           <label class="form-label">Shift Name <span style="color:var(--red)">*</span></label>
           <input class="form-input" id="newShiftName" type="text" placeholder="e.g. Morning, Night, On-Call">
         </div>
+
+        <!-- Working Hours Type — segmented control -->
         <div class="form-group">
-          <label class="form-label" style="display:flex;align-items:center;justify-content:space-between">
-            <span>Flexible Hours</span>
-            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-weight:400">
-              <input type="checkbox" id="newShiftFlexible" onchange="toggleFlexibleHours(this.checked)"
-                style="accent-color:var(--brand);width:14px;height:14px">
-              <span style="font-size:12px;color:var(--text-secondary)">Employee sets own hours</span>
-            </label>
-          </label>
+          <label class="form-label">Working Hours</label>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden">
+            <button type="button" id="shiftTypeExact" onclick="setShiftType('exact')"
+              style="padding:8px 4px;font-size:12px;font-weight:600;border:none;cursor:pointer;background:var(--brand);color:#fff;border-right:1px solid var(--border)">
+              Start &amp; End Time
+            </button>
+            <button type="button" id="shiftTypeDuration" onclick="setShiftType('duration')"
+              style="padding:8px 4px;font-size:12px;font-weight:600;border:none;cursor:pointer;background:var(--bg);color:var(--text-secondary);border-right:1px solid var(--border)">
+              Duration (hrs)
+            </button>
+            <button type="button" id="shiftTypeFlexible" onclick="setShiftType('flexible')"
+              style="padding:8px 4px;font-size:12px;font-weight:600;border:none;cursor:pointer;background:var(--bg);color:var(--text-secondary)">
+              Flexible
+            </button>
+          </div>
         </div>
-        <div id="shiftHoursSection">
+
+        <!-- Exact Time fields -->
+        <div id="shiftExactSection">
           <div class="form-row">
             <div class="form-group">
-              <label class="form-label">From (Start Time)</label>
+              <label class="form-label">Start Time</label>
               <input class="form-input" id="newShiftFrom" type="time" value="07:00">
             </div>
             <div class="form-group">
-              <label class="form-label">To (End Time)</label>
+              <label class="form-label">End Time</label>
               <input class="form-input" id="newShiftTo" type="time" value="15:00">
             </div>
           </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label class="form-label">Early Start (min before shift)</label>
-              <input class="form-input" id="newShiftEarlyStart" type="number" value="15" min="0" max="120" placeholder="0">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Late Stop (min after shift)</label>
-              <input class="form-input" id="newShiftLateStop" type="number" value="30" min="0" max="180" placeholder="0">
-            </div>
-          </div>
-          <div class="form-group" id="lateThresholdGroup">
+          <div class="form-group">
             <label class="form-label">Late Threshold (min after start)</label>
             <input class="form-input" id="newShiftLate" type="number" value="15" min="0" max="120">
           </div>
@@ -3580,6 +3583,43 @@
             </div>
           </div>
         </div>
+
+        <!-- Duration field -->
+        <div id="shiftDurationSection" style="display:none">
+          <div class="form-group">
+            <label class="form-label">Shift Duration (hours)</label>
+            <input class="form-input" id="newShiftDuration" type="number" value="8" min="1" max="24" placeholder="8">
+          </div>
+        </div>
+
+        <!-- Flexible notice -->
+        <div id="shiftFlexibleSection" style="display:none">
+          <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;font-size:12px;color:var(--text-secondary);line-height:1.5">
+            Employee sets their own start and end time. No fixed hours enforced.
+          </div>
+        </div>
+
+        <!-- Buffer times — optional, collapsible -->
+        <div style="border-top:1px solid var(--border);margin-top:4px;padding-top:12px">
+          <button type="button" onclick="toggleShiftBuffers()" id="shiftBufferToggle"
+            style="font-size:12px;font-weight:600;color:var(--brand);background:none;border:none;cursor:pointer;padding:0;display:flex;align-items:center;gap:5px">
+            <span id="shiftBufferArrow" style="font-size:10px">▶</span>
+            Buffer Times (Early Start / Late Stop)
+          </button>
+          <div id="shiftBufferSection" style="display:none;margin-top:10px">
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Early Start (min before shift)</label>
+                <input class="form-input" id="newShiftEarlyStart" type="number" value="0" min="0" max="120" placeholder="0">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Late Stop (min after shift)</label>
+                <input class="form-input" id="newShiftLateStop" type="number" value="0" min="0" max="180" placeholder="0">
+              </div>
+            </div>
+          </div>
+        </div>
+
       </div>
       <div class="modal-footer">
         <button class="btn btn-outline" onclick="closeModal('shiftModal')">Cancel</button>
@@ -4331,7 +4371,7 @@
             <div style="display:flex;align-items:center;gap:8px">
               <span style="width:8px;height:8px;border-radius:50%;background:${color};flex-shrink:0"></span>
               <span style="font-size:12px;font-weight:700;color:var(--text-primary)">${s.name}</span>
-              <span style="font-size:11px;color:var(--text-secondary)">${s.flexible ? 'Flexible hours' : s.from + ' – ' + s.to}</span>
+              <span style="font-size:11px;color:var(--text-secondary)">${s.flexible ? 'Flexible hours' : s.duration ? s.duration + 'h shift' : s.from + ' – ' + s.to}</span>
               ${!s.flexible ? '<span style="font-size:10px;color:var(--text-muted)">⏱ +' + s.lateMin + ' min late</span>' : '<span style="font-size:10px;background:var(--green-bg);color:var(--green);padding:1px 6px;border-radius:10px">Flexible</span>'}
             </div>
             <div style="display:flex;align-items:center;gap:5px">
@@ -5020,24 +5060,53 @@
     // ── Shifts (owned by Work Plan) ─────────────────────────────────────────────
     let _editingShift = null; // { wsId, shiftId } when editing, null when creating
 
-    function toggleFlexibleHours(on) {
-      document.getElementById('lateThresholdGroup').style.display = on ? 'none' : '';
+    // ── Shift modal type switcher ─────────────────────────────
+    let _shiftType = 'exact'; // 'exact' | 'duration' | 'flexible'
+
+    function setShiftType(type) {
+      _shiftType = type;
+      const styles = { exact: {}, duration: {}, flexible: {} };
+      ['exact', 'duration', 'flexible'].forEach(t => {
+        const btn = document.getElementById('shiftType' + t.charAt(0).toUpperCase() + t.slice(1));
+        if (btn) {
+          btn.style.background = t === type ? 'var(--brand)' : 'var(--bg)';
+          btn.style.color      = t === type ? '#fff' : 'var(--text-secondary)';
+        }
+      });
+      document.getElementById('shiftExactSection').style.display    = type === 'exact'    ? '' : 'none';
+      document.getElementById('shiftDurationSection').style.display = type === 'duration' ? '' : 'none';
+      document.getElementById('shiftFlexibleSection').style.display = type === 'flexible' ? '' : 'none';
+    }
+
+    function toggleShiftBuffers() {
+      const sec = document.getElementById('shiftBufferSection');
+      const arrow = document.getElementById('shiftBufferArrow');
+      const open = sec.style.display === 'none';
+      sec.style.display = open ? '' : 'none';
+      arrow.textContent = open ? '▼' : '▶';
+    }
+
+    function _resetShiftModal() {
+      document.getElementById('newShiftName').value = '';
+      document.getElementById('newShiftFrom').value = '07:00';
+      document.getElementById('newShiftTo').value   = '15:00';
+      document.getElementById('newShiftDuration').value     = '8';
+      document.getElementById('newShiftLate').value         = '15';
+      document.getElementById('newShiftDayPremium').value   = '0';
+      document.getElementById('newShiftDiffOverride').value = '0';
+      document.getElementById('newShiftEarlyStart').value   = '0';
+      document.getElementById('newShiftLateStop').value     = '0';
+      // Collapse buffer section
+      document.getElementById('shiftBufferSection').style.display = 'none';
+      document.getElementById('shiftBufferArrow').textContent = '▶';
+      setShiftType('exact');
     }
 
     function openShiftModal() {
       _editingShift = null;
+      _resetShiftModal();
       document.getElementById('shiftModalTitle').textContent = 'New Shift';
-      document.getElementById('newShiftName').value = '';
-      document.getElementById('newShiftFrom').value = '07:00';
-      document.getElementById('newShiftTo').value = '15:00';
-      document.getElementById('newShiftLate').value        = '15';
-      document.getElementById('newShiftEarlyStart').value  = '0';
-      document.getElementById('newShiftLateStop').value    = '0';
-      document.getElementById('newShiftDayPremium').value  = '0';
-      document.getElementById('newShiftDiffOverride').value = '0';
-      document.getElementById('newShiftFlexible').checked  = false;
       document.getElementById('shiftModalSaveBtn').textContent = 'Create Shift';
-      toggleFlexibleHours(false);
       openModal('shiftModal');
     }
 
@@ -5045,69 +5114,76 @@
       const s = shiftPool.find(sh => sh.id === shiftId);
       if (!s) return;
       _editingShift = { shiftId };
+      _resetShiftModal();
       document.getElementById('shiftModalTitle').textContent = `Edit Shift — ${s.name}`;
-      document.getElementById('newShiftName').value = s.name;
-      document.getElementById('newShiftFlexible').checked = !!s.flexible;
-      toggleFlexibleHours(!!s.flexible);
-      document.getElementById('newShiftFrom').value        = s.from      || '07:00';
-      document.getElementById('newShiftTo').value          = s.to        || '15:00';
-      document.getElementById('newShiftLate').value        = s.lateMin   || 15;
-      document.getElementById('newShiftEarlyStart').value  = s.earlyStart || 0;
-      document.getElementById('newShiftLateStop').value    = s.lateStop  || 0;
-      document.getElementById('newShiftDayPremium').value  = s.dayPremium || 0;
-      document.getElementById('newShiftDiffOverride').value = s.shiftDiff || 0;
       document.getElementById('shiftModalSaveBtn').textContent = 'Save Changes';
+      document.getElementById('newShiftName').value = s.name;
+
+      // Restore type
+      const type = s.flexible ? 'flexible' : (s.duration ? 'duration' : 'exact');
+      setShiftType(type);
+      if (type === 'exact') {
+        document.getElementById('newShiftFrom').value        = s.from    || '07:00';
+        document.getElementById('newShiftTo').value          = s.to      || '15:00';
+        document.getElementById('newShiftLate').value        = s.lateMin || 15;
+        document.getElementById('newShiftDayPremium').value  = s.dayPremium || 0;
+        document.getElementById('newShiftDiffOverride').value = s.shiftDiff || 0;
+      } else if (type === 'duration') {
+        document.getElementById('newShiftDuration').value = s.duration || 8;
+      }
+      // Restore buffers if set
+      if (s.earlyStart || s.lateStop) {
+        document.getElementById('newShiftEarlyStart').value = s.earlyStart || 0;
+        document.getElementById('newShiftLateStop').value   = s.lateStop   || 0;
+        document.getElementById('shiftBufferSection').style.display = '';
+        document.getElementById('shiftBufferArrow').textContent = '▼';
+      }
       openModal('shiftModal');
     }
 
     function saveShiftModal() {
-      if (_editingShift) {
-        _applyEditShift();
+      if (_editingShift) { _applyEditShift(); } else { _applyAddShift(); }
+    }
+
+    function _readShiftFields() {
+      const name = (document.getElementById('newShiftName').value || '').trim();
+      const earlyStart = parseInt(document.getElementById('newShiftEarlyStart').value) || 0;
+      const lateStop   = parseInt(document.getElementById('newShiftLateStop').value)   || 0;
+      let fields = { name, earlyStart, lateStop, flexible: false, duration: 0, from: '', to: '', lateMin: 0, dayPremium: 0, shiftDiff: 0 };
+      if (_shiftType === 'exact') {
+        fields.from       = document.getElementById('newShiftFrom').value || '07:00';
+        fields.to         = document.getElementById('newShiftTo').value   || '15:00';
+        fields.lateMin    = parseInt(document.getElementById('newShiftLate').value)         || 15;
+        fields.dayPremium = parseInt(document.getElementById('newShiftDayPremium').value)   || 0;
+        fields.shiftDiff  = parseInt(document.getElementById('newShiftDiffOverride').value) || 0;
+      } else if (_shiftType === 'duration') {
+        fields.duration = parseFloat(document.getElementById('newShiftDuration').value) || 8;
       } else {
-        _applyAddShift();
+        fields.flexible = true;
       }
+      return fields;
     }
 
     function _applyAddShift() {
-      const name = (document.getElementById('newShiftName').value || '').trim();
-      if (!name) { showToast('Please enter a shift name', 'error'); return; }
-      const flexible = document.getElementById('newShiftFlexible').checked;
-      const from     = document.getElementById('newShiftFrom').value || '07:00';
-      const to       = document.getElementById('newShiftTo').value   || '15:00';
-      const lateMin  = parseInt(document.getElementById('newShiftLate').value)         || 15;
-      const earlyStart = parseInt(document.getElementById('newShiftEarlyStart').value) || 0;
-      const lateStop   = parseInt(document.getElementById('newShiftLateStop').value)   || 0;
-      const dayPremium = parseInt(document.getElementById('newShiftDayPremium').value) || 0;
-      const shiftDiff  = parseInt(document.getElementById('newShiftDiffOverride').value) || 0;
-      shiftPool.push({ id: 's' + Date.now(), name,
-        from: flexible ? '' : from, to: flexible ? '' : to,
-        lateMin: flexible ? 0 : lateMin, flexible, earlyStart, lateStop, dayPremium, shiftDiff });
+      const f = _readShiftFields();
+      if (!f.name) { showToast('Please enter a shift name', 'error'); return; }
+      shiftPool.push({ id: 's' + Date.now(), ...f });
       closeModal('shiftModal');
       renderAllShifts();
-      showToast(`Shift "${name}" created`, 'success');
+      showToast(`Shift "${f.name}" created`, 'success');
     }
 
     function _applyEditShift() {
       const { shiftId } = _editingShift;
       const idx = shiftPool.findIndex(sh => sh.id === shiftId);
       if (idx < 0) return;
-      const name = (document.getElementById('newShiftName').value || '').trim();
-      if (!name) { showToast('Please enter a shift name', 'error'); return; }
-      const flexible = document.getElementById('newShiftFlexible').checked;
-      const from     = document.getElementById('newShiftFrom').value || '07:00';
-      const to       = document.getElementById('newShiftTo').value   || '15:00';
-      const lateMin  = parseInt(document.getElementById('newShiftLate').value)         || 15;
-      const earlyStart = parseInt(document.getElementById('newShiftEarlyStart').value) || 0;
-      const lateStop   = parseInt(document.getElementById('newShiftLateStop').value)   || 0;
-      const dayPremium = parseInt(document.getElementById('newShiftDayPremium').value) || 0;
-      const shiftDiff  = parseInt(document.getElementById('newShiftDiffOverride').value) || 0;
-      shiftPool[idx] = { ...shiftPool[idx], name,
-        from: flexible ? '' : from, to: flexible ? '' : to,
-        lateMin: flexible ? 0 : lateMin, flexible, earlyStart, lateStop, dayPremium, shiftDiff };
+      const f = _readShiftFields();
+      if (!f.name) { showToast('Please enter a shift name', 'error'); return; }
+      shiftPool[idx] = { ...shiftPool[idx], ...f };
       closeModal('shiftModal');
       renderWorkSystems();
       renderAllShifts();
-      showToast(`Shift "${name}" updated`, 'success');
+      showToast(`Shift "${f.name}" updated`, 'success');
     }
 
     function deleteShift(shiftId) {
@@ -5301,7 +5377,7 @@
               ${s.flexible ? '<span style="font-size:11px;font-weight:600;background:var(--purple-bg);color:var(--purple);border-radius:4px;padding:2px 7px">Flexible</span>' : ''}
               ${usedIn.map(n => '<span style="font-size:11px;font-weight:600;background:var(--brand-light);color:var(--brand);border-radius:4px;padding:2px 7px">' + n + '</span>').join('')}
             </div>
-            <div style="font-size:11px;color:var(--text-muted);margin-top:3px">${s.flexible ? 'Employee sets own hours' : s.from + ' – ' + s.to + '  &middot;  Late: +' + s.lateMin + 'min' + (s.earlyStart ? '  &middot;  Early: −' + s.earlyStart + 'min' : '') + (s.lateStop ? '  &middot;  Late stop: +' + s.lateStop + 'min' : '') + (s.dayPremium ? '  &middot;  Premium: ' + s.dayPremium + '%' : '') + (s.shiftDiff ? '  &middot;  Diff: ' + s.shiftDiff + '%' : '')}</div>
+            <div style="font-size:11px;color:var(--text-muted);margin-top:3px">${s.flexible ? 'Flexible — employee sets own hours' : s.duration ? s.duration + 'h shift' + (s.earlyStart ? '  &middot;  Early: −' + s.earlyStart + 'min' : '') + (s.lateStop ? '  &middot;  Late stop: +' + s.lateStop + 'min' : '') : s.from + ' – ' + s.to + (s.lateMin ? '  &middot;  Late: +' + s.lateMin + 'min' : '') + (s.earlyStart ? '  &middot;  Early: −' + s.earlyStart + 'min' : '') + (s.lateStop ? '  &middot;  Late stop: +' + s.lateStop + 'min' : '') + (s.dayPremium ? '  &middot;  Premium: ' + s.dayPremium + '%' : '') + (s.shiftDiff ? '  &middot;  Diff: ' + s.shiftDiff + '%' : '')}</div>
           </div>
         </div>
         <div style="display:flex;align-items:center;gap:8px">
