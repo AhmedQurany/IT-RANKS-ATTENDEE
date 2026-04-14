@@ -4573,6 +4573,13 @@
     let _editingRotationId = null;
     let _rpWeekCounter = 0;
 
+    function updateRpMonthsLabel() {
+      const n = parseInt(document.getElementById('rpNumRotations').value) || 0;
+      const months = (n / 4).toFixed(1).replace('.0', '');
+      const label = document.getElementById('rpMonthsLabel');
+      if (label) label.textContent = n ? '(' + months + ' month' + (parseFloat(months) !== 1 ? 's' : '') + ')' : '';
+    }
+
     function openRotationModal(rpId) {
       _editingRotationId = rpId || null;
       _rpWeekCounter = 0;
@@ -4583,6 +4590,17 @@
       document.getElementById('rpDesc').value = rp ? (rp.description || '') : '';
       document.getElementById('rpStartDate').value = rp ? rp.startDate : '';
       document.getElementById('rpEndDate').value = rp ? (rp.endDate || '') : '';
+      document.getElementById('rpNumRotations').value = rp ? (rp.numRotations || 4) : 4;
+      document.getElementById('rpNextStartDate').value = rp ? (rp.nextStartDate || '') : '';
+      updateRpMonthsLabel();
+
+      // Populate Work Plan dropdown
+      const wpSel = document.getElementById('rpWorkPlan');
+      wpSel.innerHTML = '<option value="">— Select Work Plan —</option>' +
+        workSystems.filter(ws => ws.status !== 'draft').map(ws =>
+          `<option value="${ws.id}" ${rp && rp.workPlanId === ws.id ? 'selected' : ''}>${ws.name}</option>`
+        ).join('');
+
       const body = document.getElementById('rotationWeeksBody');
       body.innerHTML = '';
       if (rp && rp.weeks.length) {
@@ -4659,19 +4677,26 @@
     }
 
     function autogenerateRotationWeeks() {
-      const body = document.getElementById('rotationWeeksBody');
-      const num = parseInt(document.getElementById('rpNumRotations').value) || 4;
-      const startVal = document.getElementById('rpNextStartDate').value || document.getElementById('rpStartDate').value || '';
-      const activePlans = workSystems.filter(ws => ws.status !== 'draft');
-      if (!activePlans.length) { showToast('No active Work Plans to rotate through', 'error'); return; }
+      const body       = document.getElementById('rotationWeeksBody');
+      const num        = parseInt(document.getElementById('rpNumRotations').value) || 4;
+      const startVal   = document.getElementById('rpNextStartDate').value || document.getElementById('rpStartDate').value || '';
+      const selectedWp = document.getElementById('rpWorkPlan').value;
+
+      // Use selected work plan if set, otherwise cycle through all active plans
+      const activePlans = selectedWp
+        ? workSystems.filter(ws => ws.id === selectedWp)
+        : workSystems.filter(ws => ws.status !== 'draft');
+
+      if (!activePlans.length) { showToast('Please select a Work Plan first', 'error'); return; }
+      if (!startVal) { showToast('Please set a Next Start Date first', 'error'); return; }
+
       body.innerHTML = '';
       _rpWeekCounter = 0;
-      let d = startVal ? new Date(startVal) : new Date();
+      let d = new Date(startVal);
       for (let i = 0; i < num; i++) {
         _rpWeekCounter++;
         const ws = activePlans[i % activePlans.length];
-        const dateStr = d.toISOString().slice(0,10);
-        body.appendChild(_buildWeekRow(_rpWeekCounter, ws.id, dateStr));
+        body.appendChild(_buildWeekRow(_rpWeekCounter, ws.id, d.toISOString().slice(0, 10)));
         d.setDate(d.getDate() + 7);
       }
       _syncWeeksEmpty();
@@ -4685,31 +4710,38 @@
     }
 
     function saveRotationPlan() {
-      const name = (document.getElementById('rpName').value || '').trim();
-      const desc = (document.getElementById('rpDesc').value || '').trim();
-      const startDate = document.getElementById('rpStartDate').value;
-      const endDate = document.getElementById('rpEndDate').value;
-      if (!name) { showToast('Please enter a plan name', 'error'); return; }
-      if (!startDate) { showToast('Please select an effective start date', 'error'); return; }
+      const name          = (document.getElementById('rpName').value || '').trim();
+      const desc          = (document.getElementById('rpDesc').value || '').trim();
+      const startDate     = document.getElementById('rpStartDate').value;
+      const endDate       = document.getElementById('rpEndDate').value;
+      const workPlanId    = document.getElementById('rpWorkPlan').value;
+      const numRotations  = parseInt(document.getElementById('rpNumRotations').value) || 4;
+      const nextStartDate = document.getElementById('rpNextStartDate').value;
+
+      if (!name)        { showToast('Please enter a plan name', 'error'); return; }
+      if (!startDate)   { showToast('Please select an effective start date', 'error'); return; }
+      if (!workPlanId)  { showToast('Please select a Work Plan', 'error'); return; }
+      if (!nextStartDate) { showToast('Please select a Next Start Date', 'error'); return; }
 
       // Collect weeks from DOM rows
       const rows = document.querySelectorAll('#rotationWeeksBody > div');
       const weeks = [];
       let valid = true;
       rows.forEach((r, i) => {
-        const wsSel = r.querySelector('select');
+        const wsSel  = r.querySelector('select');
         const dateFld = r.querySelector('input[type=date]');
         if (!wsSel || !wsSel.value) { showToast(`Week ${i + 1}: please select a Work Plan`, 'error'); valid = false; return; }
         weeks.push({ id: (_editingRotationId || 'rp-new') + '-w' + (i + 1), weekNum: i + 1, workSystemId: wsSel.value, startDate: dateFld ? dateFld.value : '' });
       });
       if (!valid) return;
 
+      const data = { name, description: desc, startDate, endDate, workPlanId, numRotations, nextStartDate, weeks };
       if (_editingRotationId) {
         const idx = rotationPlans.findIndex(r => r.id === _editingRotationId);
-        if (idx >= 0) rotationPlans[idx] = { ...rotationPlans[idx], name, description: desc, startDate, endDate, weeks };
+        if (idx >= 0) rotationPlans[idx] = { ...rotationPlans[idx], ...data };
         showToast(`Rotation plan "${name}" updated`, 'success');
       } else {
-        rotationPlans.push({ id: 'rp-' + Date.now(), name, description: desc, startDate, endDate, weeks });
+        rotationPlans.push({ id: 'rp-' + Date.now(), ...data });
         showToast(`Rotation plan "${name}" created`, 'success');
       }
       closeModal('rotationModal');
@@ -5738,32 +5770,54 @@
           </div>
         </div>
 
-        <!-- Rotation Setup -->
-        <div style="margin-top:8px">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px">
-            <div style="font-size:13px;font-weight:700;color:var(--text-primary)">Rotation Plan Setup</div>
-            <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-              <input class="form-input" id="rpNumRotations" type="number" value="4" min="1" max="52" style="width:72px;height:30px;font-size:12px;padding:0 8px" placeholder="#">
-              <input class="form-input" id="rpNextStartDate" type="date" style="height:30px;font-size:12px;padding:0 8px">
-              <button class="btn btn-outline btn-sm" onclick="autogenerateRotationWeeks()">Autogenerate</button>
-              <button class="btn btn-outline btn-sm" onclick="clearRotationWeeks()">Delete All</button>
-              <button class="btn btn-outline btn-sm" onclick="addRotationWeekRow()">+ Add Week</button>
+        <!-- Rotation Plan Setup -->
+        <div style="border-top:1px solid var(--border);margin-top:4px;padding-top:16px">
+          <div style="font-size:11px;font-weight:700;color:var(--text-muted);letter-spacing:.5px;margin-bottom:12px">ROTATION PLAN SETUP</div>
+
+          <!-- Work Plan + setup fields -->
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Work Plan <span style="color:var(--red)">*</span></label>
+              <select class="form-input" id="rpWorkPlan">
+                <option value="">— Select Work Plan —</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Number of Rotations
+                <span id="rpMonthsLabel" style="font-weight:400;color:var(--text-muted)"></span>
+              </label>
+              <input class="form-input" id="rpNumRotations" type="number" value="4" min="1" max="52"
+                oninput="updateRpMonthsLabel()" placeholder="e.g. 4">
             </div>
           </div>
-          <div
-            style="background:var(--bg-secondary);border-radius:var(--radius-sm);border:1px solid var(--border);overflow:hidden">
-            <div
-              style="display:grid;grid-template-columns:60px 160px 1fr 32px;gap:0;padding:8px 12px;border-bottom:1px solid var(--border);background:var(--bg)">
+
+          <div class="form-group">
+            <label class="form-label">Next Start Date <span style="color:var(--red)">*</span></label>
+            <input class="form-input" id="rpNextStartDate" type="date">
+          </div>
+
+          <!-- Week rows table -->
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;margin-top:4px">
+            <div style="font-size:12px;font-weight:600;color:var(--text-secondary)">Weekly Schedule</div>
+            <div style="display:flex;gap:6px">
+              <button class="btn btn-outline btn-sm" onclick="autogenerateRotationWeeks()">Autogenerate</button>
+              <button class="btn btn-outline btn-sm" onclick="addRotationWeekRow()">+ Add Week</button>
+              <button class="btn btn-outline btn-sm" style="color:var(--red);border-color:var(--red)" onclick="clearRotationWeeks()">Clear All</button>
+            </div>
+          </div>
+
+          <div style="background:var(--bg-secondary);border-radius:var(--radius-sm);border:1px solid var(--border);overflow:hidden">
+            <div style="display:grid;grid-template-columns:60px 160px 1fr 32px;gap:0;padding:8px 12px;border-bottom:1px solid var(--border);background:var(--bg)">
               <span style="font-size:11px;font-weight:600;color:var(--text-muted)">WEEK</span>
               <span style="font-size:11px;font-weight:600;color:var(--text-muted)">START DATE</span>
-              <span style="font-size:11px;font-weight:600;color:var(--text-muted)">WORK SYSTEM</span>
+              <span style="font-size:11px;font-weight:600;color:var(--text-muted)">WORK PLAN</span>
               <span></span>
             </div>
             <div id="rotationWeeksBody" style="display:flex;flex-direction:column"></div>
           </div>
           <div id="rotationWeeksEmpty"
             style="display:none;text-align:center;padding:24px;font-size:12px;color:var(--text-muted)">
-            No weeks added yet. Click "+ Add Week" to begin.
+            No weeks added yet. Click Autogenerate or + Add Week to begin.
           </div>
         </div>
       </div>
